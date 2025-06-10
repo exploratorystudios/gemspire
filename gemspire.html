@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gemspire - Match-3 Roguelike</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Orbitron', monospace;
+    background: linear-gradient(135deg, #1e1e2e 0%, #2d1b3d 50%, #3e2723 100%);
+    color: #e0e0e0;
+    overflow: hidden;
+    height: 100vh;
+    position: relative;
+}
+
+.bg-animation {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.1;
+    z-index: -1;
+}
+
+.bg-particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: radial-gradient(circle, #7c3aed, transparent);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+    50% { transform: translateY(-20px) rotate(180deg); opacity: 0.7; }
+}
+
+.game-container {
+    display: flex;
+    height: 100vh;
+    padding: 20px;
+    gap: 20px;
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(124, 58, 237, 0.3);
+    box-shadow: 0 0 30px rgba(124, 58, 237, 0.2);
+    width: 420px;
+    height: 420px;
+    position: relative;
+}
+
+.gem {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 24px;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.gem.selected {
+    transform: scale(1.15);
+    box-shadow: 
+        0 0 25px rgba(255, 255, 255, 0.8),
+        0 0 40px rgba(124, 58, 237, 0.6),
+        inset 0 0 15px rgba(255, 255, 255, 0.3);
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    animation: selectedPulse 1.5s ease-in-out infinite;
+    z-index: 10;
+    position: relative;
+}
+
+.gem.matching {
+    animation: pulse 0.5s ease-in-out;
+}
+
+.gem.special {
+    box-shadow: 0 0 15px currentColor;
+    border-color: gold;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); box-shadow: 0 0 30px currentColor; }
+    100% { transform: scale(1); }
+}
+
+.gem.fire { background: linear-gradient(135deg, #ff6b6b, #ff8787); color: #fff; }
+.gem.ice { background: linear-gradient(135deg, #74c0fc, #339af0); color: #fff; }
+.gem.nature { background: linear-gradient(135deg, #51cf66, #37b24d); color: #fff; }
+.gem.lightning { background: linear-gradient(135deg, #ffd43b, #fab005); color: #000; }
+.gem.void { background: linear-gradient(135deg, #9775fa, #7c3aed); color: #fff; }
+
+.ui-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 300px;
+    position: relative;
+}
+
+.stats-panel {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(124, 58, 237, 0.3);
+    position: relative;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.stat-value {
+    font-weight: bold;
+    color: #7c3aed;
+}
+
+.moves-left {
+    font-size: 24px;
+    text-align: center;
+    color: #ffd43b;
+    font-weight: bold;
+}
+
+.floor-info {
+    text-align: center;
+    font-size: 18px;
+    color: #e0e0e0;
+    margin-bottom: 10px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #9775fa);
+    transition: width 0.5s ease;
+    border-radius: 10px;
+}
+
+.relics-panel {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(124, 58, 237, 0.3);
+}
+
+.relic {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border-left: 4px solid #7c3aed;
+}
+
+.relic-name {
+    font-weight: bold;
+    color: #ffd43b;
+    margin-bottom: 5px;
+}
+
+.relic-desc {
+    font-size: 12px;
+    color: #b0b0b0;
+}
+
+.relic-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.relic-option {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(147, 51, 234, 0.3));
+    border: 2px solid rgba(124, 58, 237, 0.5);
+    border-radius: 12px;
+    padding: 20px;
+    color: white;
+    font-family: 'Orbitron', monospace;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: left;
+}
+
+.relic-option:hover {
+    border-color: rgba(124, 58, 237, 0.8);
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(147, 51, 234, 0.4));
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(124, 58, 237, 0.3);
+}
+
+.relic-option-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffd43b;
+    margin-bottom: 8px;
+}
+
+.relic-option-desc {
+    font-size: 14px;
+    color: #e0e0e0;
+    line-height: 1.4;
+}
+
+.combo-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    font-weight: bold;
+    color: #ffd43b;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 100;
+}
+
+.combo-indicator.show {
+    animation: comboPopup 1s ease-out;
+}
+
+@keyframes comboPopup {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+
+.title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 900;
+    color: #7c3aed;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
+}
+
+.game-over {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    border: 3px solid #7c3aed;
+    display: none;
+    z-index: 1000;
+}
+
+.btn {
+    background: linear-gradient(135deg, #7c3aed, #9775fa);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-family: 'Orbitron', monospace;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin: 10px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(124, 58, 237, 0.4);
+}
+
+.start-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(124, 58, 237, 0.2));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.start-title {
+    font-size: 72px;
+    font-weight: 900;
+    background: linear-gradient(45deg, #7c3aed, #ffd43b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 30px;
+    animation: titleGlow 3s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+    0%, 100% { filter: drop-shadow(0 0 10px rgba(124, 58, 237, 0.5)); }
+    50% { filter: drop-shadow(0 0 30px rgba(255, 212, 59, 0.7)); }
+}
+
+.start-subtitle {
+    font-size: 24px;
+    color: #e0e0e0;
+    margin-bottom: 50px;
+    text-align: center;
+}
+
+.btn-start {
+    background: linear-gradient(135deg, #7c3aed, #9775fa);
+    color: white;
+    border: none;
+    padding: 20px 40px;
+    border-radius: 12px;
+    font-family: 'Orbitron', monospace;
+    font-weight: bold;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 5px 20px rgba(124, 58, 237, 0.3);
+}
+
+.btn-start:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(124, 58, 237, 0.5);
+}
+
+.game-rules {
+    max-width: 600px;
+    margin: 30px;
+    padding: 30px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(124, 58, 237, 0.3);
+}
+
+.rules-title {
+    font-size: 20px;
+    color: #ffd43b;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.rules-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #b0b0b0;
+    text-align: left;
+}
+
+.gem-value-display {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    font-size: 10px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.7);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Score Display - Now directly in stats panel */
+.score-display {
+    font-size: 32px;
+    font-weight: bold;
+    color: #ffd43b;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    text-align: center;
+    margin: 10px 0;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: visible;
+}
+
+/* Professional "kablaam" animation - subtle scale and glow */
+.score-display.kablaam {
+    animation: professionalKablaam 0.8s ease-out;
+}
+
+@keyframes professionalKablaam {
+    0% { 
+        transform: scale(1); 
+        filter: brightness(1) drop-shadow(0 0 5px rgba(255, 212, 59, 0.3));
+    }
+    30% { 
+        transform: scale(1.15); 
+        filter: brightness(1.3) drop-shadow(0 0 15px rgba(255, 212, 59, 0.6));
+    }
+    60% { 
+        transform: scale(1.08); 
+        filter: brightness(1.1) drop-shadow(0 0 10px rgba(255, 212, 59, 0.4));
+    }
+    100% { 
+        transform: scale(1); 
+        filter: brightness(1) drop-shadow(0 0 5px rgba(255, 212, 59, 0.3));
+    }
+}
+
+/* Professional "wibble" animation - gentle oscillation */
+.score-display.wibble {
+    animation: professionalWibble 0.6s ease-in-out;
+}
+
+@keyframes professionalWibble {
+    0% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.05) rotate(1deg); }
+    50% { transform: scale(1.08) rotate(0deg); }
+    75% { transform: scale(1.05) rotate(-1deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Combo display below score */
+.combo-display {
+    font-size: 14px;
+    font-weight: bold;
+    color: #ff6b6b;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    text-align: center;
+    opacity: 0;
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+}
+
+.combo-display.show {
+    opacity: 1;
+}
+
+/* Score Popup - Appears from top right */
+.score-popup {
+    position: fixed;
+    font-size: 24px;
+    font-weight: 900;
+    color: #ffd43b;
+    text-shadow: 
+        2px 2px 0px rgba(0, 0, 0, 0.8),
+        0 0 10px rgba(255, 212, 59, 0.8);
+    opacity: 0;
+    transform: scale(0.8);
+    z-index: 9999;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.score-popup.animate {
+    animation: scorePopupAnimationFixed 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes scorePopupAnimationFixed {
+    0% {
+        opacity: 0;
+        transform: translate(0, 0) scale(0.8);
+    }
+    20% {
+        opacity: 1;
+        transform: translate(30px, -30px) scale(1.2);
+    }
+    50% {
+        opacity: 1;
+        transform: translate(60px, -60px) scale(1.0);
+    }
+    80% {
+        opacity: 0.7;
+        transform: translate(90px, -90px) scale(0.9);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(120px, -120px) scale(0.8);
+    }
+}
+
+.game-board-container {
+    position: relative;
+}
+
+/* Continue Button */
+.continue-option {
+    background: linear-gradient(135deg, #51cf66, #37b24d);
+    border: 2px solid rgba(81, 207, 102, 0.5);
+}
+
+.continue-option:hover {
+    border-color: rgba(81, 207, 102, 0.8);
+    background: linear-gradient(135deg, rgba(81, 207, 102, 0.3), rgba(55, 178, 77, 0.4));
+}
+
+.continue-option .relic-option-name {
+    color: #51cf66;
+}
+
+.gem.lightning-strike {
+    animation: lightningStrike 0.8s ease-out;
+    box-shadow: 0 0 25px #ffd43b, 0 0 50px #fab005;
+}
+
+@keyframes lightningStrike {
+    0% { 
+        transform: scale(1); 
+        filter: brightness(1);
+    }
+    30% { 
+        transform: scale(1.2); 
+        filter: brightness(2) saturate(1.5);
+    }
+    60% { 
+        transform: scale(1.1); 
+        filter: brightness(1.5) saturate(1.2);
+    }
+    100% { 
+        transform: scale(1); 
+        filter: brightness(1);
+    }
+}
+
+.gem.lightning.thunderbolt {
+    border-color: gold;
+    box-shadow: 0 0 20px #ffd43b;
+    font-weight: 900;
+}
+
+@keyframes selectedPulse {
+    0%, 100% { 
+        box-shadow: 
+            0 0 25px rgba(255, 255, 255, 0.8),
+            0 0 40px rgba(124, 58, 237, 0.6),
+            inset 0 0 15px rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.9);
+    }
+    50% { 
+        box-shadow: 
+            0 0 35px rgba(255, 255, 255, 1),
+            0 0 60px rgba(124, 58, 237, 0.8),
+            inset 0 0 20px rgba(255, 255, 255, 0.5);
+        border-color: rgba(255, 255, 255, 1);
+    }
+}
+</style>
+</head>
+<body>
+    <div class="bg-animation" id="bgAnimation"></div>
+
+    <div class="start-screen" id="startScreen">
+        <div class="start-title">⚡ GEMSPIRE ⚡</div>
+        <div class="start-subtitle">A mystical match-3 roguelike adventure</div>
+        <button class="btn-start" onclick="startGame()">Begin Your Journey</button>
+
+        <div class="game-rules">
+            <div class="rules-title">How to Play</div>
+            <div class="rules-text">
+                • Match 3+ gems by swapping adjacent pieces<br>
+                • Score points to reach the target and advance floors<br>
+                • Each floor increases difficulty but offers powerful relics<br>
+                • Special gems (50+ value) glow with power<br>
+                • Chain matches for bonus multipliers<br>
+                • Survive as many floors as you can!
+            </div>
+        </div>
+    </div>
+
+    <div class="game-container" id="gameContainer" style="display: none;">
+        <div>
+            <h1 class="title">⚡ GEMSPIRE ⚡</h1>
+            <div class="game-board-container">
+                <div class="game-board" id="gameBoard"></div>
+            </div>
+            <div class="combo-indicator" id="comboIndicator"></div>
+        </div>
+
+        <div class="ui-panel">
+            <div class="stats-panel">
+                <div class="floor-info">Floor <span id="currentFloor">1</span></div>
+                <div class="moves-left">Moves: <span id="movesLeft">4</span></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                
+                <!-- Score display directly in stats panel -->
+                <div class="score-display" id="scoreDisplay">0</div>
+                <div class="combo-display" id="comboDisplay">Combo x1</div>
+                
+                <div class="stat-item">
+                    <span>Target:</span>
+                    <span class="stat-value" id="targetScore">800</span>
+                </div>
+                <div class="stat-item">
+                    <span>Multiplier:</span>
+                    <span class="stat-value" id="multiplier">1.0x</span>
+                </div>
+            </div>
+            
+            <div class="relics-panel">
+                <h3 style="color: #ffd43b; margin-bottom: 15px;">⚡ Active Relics</h3>
+                <div id="relicsList">
+                    <div class="relic">
+                        <div class="relic-name">Starter Gem</div>
+                        <div class="relic-desc">Basic gem matching power</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-over" id="relicSelectionScreen">
+        <h2>Choose Your Relic</h2>
+        <p>Select one upgrade to help you on your journey:</p>
+        <div id="relicOptions" class="relic-options"></div>
+    </div>
+
+    <div class="game-over" id="gameOverScreen">
+        <h2>Game Over!</h2>
+        <p id="floorResult">Game Over</p>
+        <button class="btn" onclick="restartGame()">Restart</button>
+        <button class="btn" onclick="returnToStart()">Main Menu</button>
+    </div>
+
+    <script>
+        class Gemspire {
+            constructor() {
+                this.board = [];
+                this.selectedGem = null;
+                this.score = 0;
+                this.displayScore = 0;
+                this.moves = 4;
+                this.floor = 1;
+                this.targetScore = 800;
+                this.multiplier = 1.0;
+                this.gemTypes = ['fire', 'ice', 'nature', 'lightning', 'void'];
+                this.gemSymbols = {
+                    fire: '🔥',
+                    ice: '❄️',
+                    nature: '🌿',
+                    lightning: '⚡',
+                    void: '🌀'
+                };
+                this.animating = false;
+                this.relics = [];
+                this.cascadeCount = 0;
+                this.matchCounter = 0;
+                this.currentCombo = 0;
+                this.isCurrentlyScoring = false;
+                
+                // Basic relic effects
+                this.bonusMoves = 0;
+                this.baseMultiplier = 1;
+                this.fireBoost = 1;
+                this.lightningBoost = 1;
+                this.voidBoost = 1;
+                this.gemValueBoost = 1;
+                this.comboBoost = 1;
+                this.luckyCharm = false;
+                this.diceOfFate = false;
+                this.timeDilator = false;
+                
+                // Medium-level game changing relics
+                this.explosiveMatches = false;
+                this.gemAlchemy = false;
+                this.cascadeMaster = false;
+                this.voidHunger = false;
+                this.stormSurge = false;
+                
+                // Initialize sound effects
+                this.initializeSounds();
+                this.createBackgroundAnimation();
+                
+                this.lightningStrikes = {}; // Track strikes per gem position
+            }
+            
+            initializeSounds() {
+                this.sounds = {
+                    swap: new Audio('swap.mp3'),
+                    clear: new Audio('clear.mp3'),
+                    lightning: new Audio('lightning.mp3'),
+                    void: new Audio('void.mp3'),
+                    explode: new Audio('explode.mp3')
+                };
+                
+                // Set volume levels
+                this.sounds.swap.volume = 0.5;
+                this.sounds.clear.volume = 0.6;
+                
+                // Preload sounds
+                Object.values(this.sounds).forEach(sound => {
+                    sound.preload = 'auto';
+                    sound.addEventListener('error', () => {
+                        console.log(`Sound file not found: ${sound.src}`);
+                    });
+                });
+            }
+            
+            playSound(soundName) {
+                try {
+                    if (this.sounds[soundName]) {
+                        this.sounds[soundName].currentTime = 0;
+                        this.sounds[soundName].play().catch(e => {
+                            console.log('Audio play failed:', e);
+                        });
+                    }
+                } catch (error) {
+                    console.log('Sound playback error:', error);
+                }
+            }
+            
+            createBackgroundAnimation() {
+                const bgAnimation = document.getElementById('bgAnimation');
+                for (let i = 0; i < 30; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'bg-particle';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.top = Math.random() * 100 + '%';
+                    particle.style.animationDelay = Math.random() * 6 + 's';
+                    particle.style.animationDuration = (4 + Math.random() * 4) + 's';
+                    bgAnimation.appendChild(particle);
+                }
+            }
+            
+            initializeGame() {
+                this.createBoard();
+                this.updateUI();
+                this.addEventListeners();
+                this.initializeScoreDisplay();
+            }
+
+            initializeScoreDisplay() {
+                this.displayScore = this.score;
+                this.updateScoreDisplay();
+            }
+
+            updateScoreDisplay() {
+                const scoreDisplay = document.getElementById('scoreDisplay');
+                if (scoreDisplay) {
+                    scoreDisplay.textContent = Math.floor(this.displayScore);
+                }
+            }
+
+            animateScoreIncrease(amount) {
+                // Show popup with the amount being added
+                this.showScorePopup(amount);
+
+                // Animate score counter
+                const startScore = this.displayScore;
+                const endScore = this.score;
+                const duration = 600;
+                const startTime = Date.now();
+
+                const animateScore = () => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    this.displayScore = startScore + (endScore - startScore) * progress;
+                    this.updateScoreDisplay();
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animateScore);
+                    }
+                };
+
+                requestAnimationFrame(animateScore);
+            }
+
+            showScorePopup(amount) {
+                console.log('showScorePopup called with amount:', amount);
+                
+                const scoreDisplay = document.getElementById('scoreDisplay');
+                if (!scoreDisplay) {
+                    console.log('scoreDisplay not found!');
+                    return;
+                }
+
+                // Create a new popup element for each score increase
+                const scorePopup = document.createElement('div');
+                scorePopup.className = 'score-popup';
+                scorePopup.textContent = `+${Math.floor(amount)}`;
+                scorePopup.style.position = 'fixed';
+                scorePopup.style.zIndex = '9999';
+                
+                // Get the position of the score display text itself
+                const rect = scoreDisplay.getBoundingClientRect();
+                
+                // Position from the top-right corner of the actual score text
+                const textWidth = scoreDisplay.offsetWidth;
+                const textHeight = scoreDisplay.offsetHeight;
+
+                scorePopup.style.left = (rect.left + textWidth - 135) + 'px'; // Start 125px to the left of right edge
+                scorePopup.style.top = (rect.top + 5) + 'px'; // Start from top of text
+                
+                console.log('Popup positioned at:', scorePopup.style.left, scorePopup.style.top);
+                
+                // Add to document body
+                document.body.appendChild(scorePopup);
+                
+                // Force reflow and start animation
+                scorePopup.offsetHeight;
+                scorePopup.classList.add('animate');
+                
+                console.log('Animation class added');
+                
+                // Remove the popup after animation completes
+                setTimeout(() => {
+                    if (scorePopup.parentNode) {
+                        scorePopup.parentNode.removeChild(scorePopup);
+                        console.log('Popup removed');
+                    }
+                }, 1200);
+                // Remove the popup after animation completes
+                setTimeout(() => {
+                    if (scorePopup.parentNode) {
+                        scorePopup.parentNode.removeChild(scorePopup);
+                        console.log('Popup removed');
+                    }
+                }, 1200);
+            }
+
+            updateComboDisplay() {
+                const comboDisplay = document.getElementById('comboDisplay');
+                if (comboDisplay) {
+                    if (this.isCurrentlyScoring && this.currentCombo >= 1) {
+                        comboDisplay.textContent = `Combo x${this.currentCombo}`;
+                        comboDisplay.classList.add('show');
+                    } else {
+                        comboDisplay.classList.remove('show');
+                    }
+                }
+            }
+
+            hideComboDisplay() {
+                const comboDisplay = document.getElementById('comboDisplay');
+                if (comboDisplay) {
+                    comboDisplay.classList.remove('show', 'pulse');
+                }
+                this.isCurrentlyScoring = false;
+            }
+
+            showScoreDisplayWithKablaam() {
+                const scoreDisplay = document.getElementById('scoreDisplay');
+                
+                if (scoreDisplay) {
+                    // Remove any existing animations
+                    scoreDisplay.classList.remove('wibble', 'kablaam');
+                    scoreDisplay.offsetHeight; // Force reflow
+                    
+                    // Add the kablaam animation
+                    scoreDisplay.classList.add('kablaam');
+                }
+            }
+
+            showScoreDisplayWithWibble() {
+                const scoreDisplay = document.getElementById('scoreDisplay');
+                if (scoreDisplay) {
+                    // Remove kablaam animation
+                    scoreDisplay.classList.remove('kablaam');
+                    scoreDisplay.offsetHeight; // Force reflow
+                    
+                    // Add the wibble animation
+                    scoreDisplay.classList.add('wibble');
+                }
+            }
+            
+            createBoard() {
+                const gameBoard = document.getElementById('gameBoard');
+                gameBoard.innerHTML = '';
+                this.board = [];
+                
+                this.generateValidBoard();
+                
+                for (let row = 0; row < 7; row++) {
+                    for (let col = 0; col < 7; col++) {
+                        const gem = this.board[row][col];
+                        
+                        const gemElement = document.createElement('div');
+                        gemElement.className = `gem ${gem.type}`;
+                        if (gem.value >= 50) {
+                            gemElement.classList.add('special');
+                        }
+                        gemElement.textContent = gem.symbol;
+                        gemElement.dataset.row = row;
+                        gemElement.dataset.col = col;
+
+                        const valueDisplay = document.createElement('div');
+                        valueDisplay.className = 'gem-value-display';
+                        valueDisplay.textContent = gem.value;
+                        gemElement.appendChild(valueDisplay);
+                        
+                        gemElement.style.transform = 'translateY(-420px)';
+                        gemElement.style.opacity = '0';
+                        
+                        gameBoard.appendChild(gemElement);
+                        
+                        setTimeout(() => {
+                            gemElement.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease';
+                            gemElement.style.transform = 'translateY(0)';
+                            gemElement.style.opacity = '1';
+                        }, (row * 7 + col) * 80);
+                    }
+                }
+            }
+            
+            generateValidBoard() {
+                for (let row = 0; row < 7; row++) {
+                    this.board[row] = [];
+                    for (let col = 0; col < 7; col++) {
+                        this.board[row][col] = null;
+                    }
+                }
+                
+                for (let row = 0; row < 7; row++) {
+                    for (let col = 0; col < 7; col++) {
+                        let gem;
+                        let attempts = 0;
+                        
+                        do {
+                            gem = this.createRandomGem();
+                            attempts++;
+                            if (attempts > 50) break;
+                        } while (this.wouldCreateMatch(row, col, gem.type));
+                        
+                        this.board[row][col] = gem;
+                    }
+                }
+            }
+            
+            wouldCreateMatch(row, col, gemType) {
+                let leftCount = 0;
+                for (let c = col - 1; c >= 0; c--) {
+                    if (this.board[row][c] && this.board[row][c].type === gemType) {
+                        leftCount++;
+                    } else {
+                        break;
+                    }
+                }
+                
+                let rightCount = 0;
+                for (let c = col + 1; c < 7; c++) {
+                    if (this.board[row][c] && this.board[row][c].type === gemType) {
+                        rightCount++;
+                    } else {
+                        break;
+                    }
+                }
+                
+                let upCount = 0;
+                for (let r = row - 1; r >= 0; r--) {
+                    if (this.board[r][col] && this.board[r][col].type === gemType) {
+                        upCount++;
+                    } else {
+                        break;
+                    }
+                }
+                
+                let downCount = 0;
+                for (let r = row + 1; r < 7; r++) {
+                    if (this.board[r][col] && this.board[r][col].type === gemType) {
+                        downCount++;
+                    } else {
+                        break;
+                    }
+                }
+                
+                return (leftCount + rightCount >= 2) || (upCount + downCount >= 2);
+            }
+            
+            createRandomGem() {
+                const type = this.gemTypes[Math.floor(Math.random() * this.gemTypes.length)];
+                let baseValue = Math.floor(Math.random() * 25) + 15;
+                
+                if (this.luckyCharm && Math.random() < 0.4) {
+                    baseValue += 25;
+                }
+                
+                baseValue = Math.floor(baseValue * this.gemValueBoost);
+                
+                const gem = {
+                    type: type,
+                    symbol: this.gemSymbols[type],
+                    value: baseValue,
+                    isThunderbolt: false,
+                    strikeCount: 0
+                };
+                
+                return gem;
+            }
+            
+            addEventListeners() {
+                const gameBoard = document.getElementById('gameBoard');
+                gameBoard.addEventListener('click', (e) => {
+                    if (this.animating || this.moves <= 0) return;
+                    
+                    const gemElement = e.target.closest('.gem');
+                    if (!gemElement) return;
+                    
+                    const row = parseInt(gemElement.dataset.row);
+                    const col = parseInt(gemElement.dataset.col);
+                    
+                    if (this.selectedGem) {
+                        if (this.selectedGem.row === row && this.selectedGem.col === col) {
+                            this.clearSelection();
+                        } else if (this.isAdjacent(this.selectedGem, {row, col})) {
+                            this.swapGems(this.selectedGem, {row, col});
+                        } else {
+                            this.selectGem(row, col);
+                        }
+                    } else {
+                        this.selectGem(row, col);
+                    }
+                });
+            }
+            
+            selectGem(row, col) {
+                this.clearSelection();
+                this.selectedGem = {row, col};
+                const gemElement = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                gemElement.classList.add('selected');
+            }
+            
+            clearSelection() {
+                if (this.selectedGem) {
+                    const gemElement = document.querySelector(`[data-row="${this.selectedGem.row}"][data-col="${this.selectedGem.col}"]`);
+                    if (gemElement) {
+                        gemElement.classList.remove('selected');
+                    }
+                }
+                this.selectedGem = null;
+            }
+            
+            isAdjacent(gem1, gem2) {
+                const rowDiff = Math.abs(gem1.row - gem2.row);
+                const colDiff = Math.abs(gem1.col - gem2.col);
+                return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
+            }
+            
+            async swapGems(gem1, gem2) {
+                this.animating = true;
+                
+                // Play swap sound immediately when swap starts
+                this.playSound('swap');
+                
+                const elem1 = document.querySelector(`[data-row="${gem1.row}"][data-col="${gem1.col}"]`);
+                const elem2 = document.querySelector(`[data-row="${gem2.row}"][data-col="${gem2.col}"]`);
+                
+                const rect1 = elem1.getBoundingClientRect();
+                const rect2 = elem2.getBoundingClientRect();
+                
+                const deltaX = rect2.left - rect1.left;
+                const deltaY = rect2.top - rect1.top;
+                
+                elem1.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                elem2.style.transform = `translate(${-deltaX}px, ${-deltaY}px)`;
+                
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                // Temporarily swap gems to check for matches
+                const temp = this.board[gem1.row][gem1.col];
+                this.board[gem1.row][gem1.col] = this.board[gem2.row][gem2.col];
+                this.board[gem2.row][gem2.col] = temp;
+                
+                // Check if this swap creates any matches
+                const matches = this.findMatches();
+                
+                if (matches.length === 0) {
+                    // No matches found - revert the swap
+                    this.board[gem2.row][gem2.col] = this.board[gem1.row][gem1.col];
+                    this.board[gem1.row][gem1.col] = temp;
+                    
+                    // Animate gems back to original positions
+                    elem1.style.transform = '';
+                    elem2.style.transform = '';
+                    
+                    this.clearSelection();
+                    this.animating = false;
+                    return; // Don't consume a move
+                }
+                
+                // Valid move - update gem elements and consume move
+                this.moves--;
+                document.getElementById('movesLeft').textContent = this.moves;
+                
+                if (this.diceOfFate && Math.random() < 0.15) {
+                    this.showComboIndicator('🎲 LUCKY! FREE MOVE!');
+                    this.moves++; // Give back the move since it was lucky
+                }
+
+                if (this.timeDilator) {
+                    this.targetScore = Math.max(this.targetScore * 0.9, this.targetScore - 25);
+                    this.showComboIndicator('⏰ TARGET -25!');
+                }
+                
+                this.updateGemElement(elem1, this.board[gem1.row][gem1.col]);
+                this.updateGemElement(elem2, this.board[gem2.row][gem2.col]);
+                
+                elem1.style.transform = '';
+                elem2.style.transform = '';
+                
+                this.clearSelection();
+                
+                this.isCurrentlyScoring = false;
+                
+                // Add a small delay before processing matches to ensure swap sound finishes
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                await this.processMatches();
+                
+                this.updateUI();
+                this.checkGameState();
+                this.animating = false;
+            }
+
+            updateGemElement(element, gem) {
+                element.className = `gem ${gem.type}`;
+                if (gem.value >= 50) {
+                    element.classList.add('special');
+                }
+                if (gem.isThunderbolt) {
+                    element.classList.add('thunderbolt');
+                }
+                element.textContent = gem.symbol;
+                
+                let valueDisplay = element.querySelector('.gem-value-display');
+                if (!valueDisplay) {
+                    valueDisplay = document.createElement('div');
+                    valueDisplay.className = 'gem-value-display';
+                    element.appendChild(valueDisplay);
+                }
+                valueDisplay.textContent = gem.value;
+            }
+            
+            async processMatches() {
+                let totalMatches = 0;
+                let comboMultiplier = 1;
+                this.cascadeCount = 0;
+                this.currentCombo = 0;
+                
+                while (true) {
+                    const matches = this.findMatches();
+                    if (matches.length === 0) break;
+                    
+                    if (!this.isCurrentlyScoring) {
+                        this.showScoreDisplayWithKablaam();
+                        this.isCurrentlyScoring = true;
+                    } else {
+                        this.showScoreDisplayWithWibble();
+                    }
+                    
+                    this.playSound('clear');
+                    
+                    totalMatches += matches.length;
+                    this.matchCounter++;
+                    this.cascadeCount++;
+                    this.currentCombo++;
+                    
+                    this.updateComboDisplay();
+                    
+                    if (this.voidHunger) {
+                        await this.processVoidHunger(matches);
+                    }
+
+                    // Process Storm Surge
+                    if (this.stormSurge) {
+                        await this.processStormSurge(matches);
+                    }
+                    
+                    // Check for explosive matches - same gem type with 4+ matches
+                    if (this.explosiveMatches && matches.length >= 4) {
+                        const matchesByType = {};
+                        for (const match of matches) {
+                            const gem = this.board[match.row][match.col];
+                            if (gem) {
+                                if (!matchesByType[gem.type]) {
+                                    matchesByType[gem.type] = [];
+                                }
+                                matchesByType[gem.type].push(match);
+                            }
+                        }
+                        
+                        let explosiveType = null;
+                        let explosiveMatches = [];
+                        for (const [type, typeMatches] of Object.entries(matchesByType)) {
+                            if (typeMatches.length >= 4) {
+                                explosiveType = type;
+                                explosiveMatches = typeMatches;
+                                break;
+                            }
+                        }
+                        
+                        if (explosiveType && explosiveMatches.length >= 4) {
+                            this.showComboIndicator('💥 EXPLOSIVE MATCH!');
+                            this.playSound('explode');
+        
+                            let explosionScore = 0;
+                            const surroundingGems = new Set();
+                            const allExplodingGems = [...explosiveMatches]; // Start with the matched gems
+        
+                            // Find all surrounding gems to explode
+                            for (const match of explosiveMatches) {
+                                const directions = [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]];
+                                for (const [dr, dc] of directions) {
+                                    const explodeRow = match.row + dr;
+                                    const explodeCol = match.col + dc;
+                                    if (explodeRow >= 0 && explodeRow < 7 && explodeCol >= 0 && explodeCol < 7 && 
+                                        this.board[explodeRow][explodeCol] && 
+                                        !matches.some(m => m.row === explodeRow && m.col === explodeCol)) {
+                    
+                                        const gemKey = `${explodeRow}-${explodeCol}`;
+                                        if (!surroundingGems.has(gemKey)) {
+                                            surroundingGems.add(gemKey);
+                                            explosionScore += this.board[explodeRow][explodeCol].value * 0.5;
+                                            allExplodingGems.push({row: explodeRow, col: explodeCol});
+                                            this.board[explodeRow][explodeCol] = null;
+                                        }
+                                    }
+                                }
+                            }
+        
+                            // Explode all gems simultaneously (both matched and surrounding)
+                            await this.explodeMatchedGems(allExplodingGems);
+        
+                            const totalExplosionScore = Math.floor(explosionScore * this.multiplier * this.baseMultiplier);
+                            this.score += totalExplosionScore;
+                            this.animateScoreIncrease(totalExplosionScore);
+                        }
+                    }
+                    
+                    for (const match of matches) {
+                        const elem = document.querySelector(`[data-row="${match.row}"][data-col="${match.col}"]`);
+                        if (elem) {
+                            const gem = this.board[match.row][match.col];
+                            let wasExplosive = false;
+                            
+                            if (this.explosiveMatches && matches.length >= 4 && gem) {
+                                const sameTypeCount = matches.filter(m => {
+                                    const matchGem = this.board[m.row][m.col];
+                                    return matchGem && matchGem.type === gem.type;
+                                }).length;
+                                
+                                wasExplosive = sameTypeCount >= 4;
+                            }
+                            
+                            if (!wasExplosive) {
+                                elem.classList.add('matching');
+                            }
+                        }
+                    }
+                    
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                    let matchScore = 0;
+                    for (const match of matches) {
+                        let gemValue = this.board[match.row][match.col] ? this.board[match.row][match.col].value : 0;
+                        let gemType = this.board[match.row][match.col] ? this.board[match.row][match.col].type : null;
+                        
+                        if (gemValue > 0) {
+                            if (gemType === 'fire' && this.fireBoost > 1) {
+                                gemValue *= this.fireBoost;
+                            }
+                            if (gemType === 'lightning' && this.lightningBoost > 1) {
+                                gemValue *= this.lightningBoost;
+                            }
+                            if (gemType === 'void' && this.voidBoost > 1) {
+                                gemValue *= this.voidBoost;
+                            }
+                            
+                            matchScore += gemValue * (comboMultiplier * this.comboBoost);
+                        }
+                        
+                        this.board[match.row][match.col] = null;
+                    }
+                    
+                    if (this.gemAlchemy && this.matchCounter % 3 === 0 && matches.length > 0) {
+                        const firstMatch = matches[0];
+                        const firstElem = document.querySelector(`[data-row="${firstMatch.row}"][data-col="${firstMatch.col}"]`);
+                        let targetType = null;
+                        
+                        for (const type of this.gemTypes) {
+                            if (firstElem && firstElem.classList.contains(type)) {
+                                targetType = type;
+                                break;
+                            }
+                        }
+                        
+                        if (targetType) {
+                            for (let row = 0; row < 7; row++) {
+                                for (let col = 0; col < 7; col++) {
+                                    if (this.board[row][col] && this.board[row][col].type === targetType) {
+                                        this.board[row][col].value = 65;
+                                    }
+                                }
+                            }
+                            this.showComboIndicator('🧪 ALCHEMY ACTIVATED!');
+                        }
+                    }
+                    
+                    if (this.cascadeMaster && this.cascadeCount > 1 && this.cascadeCount % 2 === 0) {
+                        this.baseMultiplier += 0.1;
+                        this.showComboIndicator('🌊 CASCADE MASTERY!');
+                    }
+                    
+                    const finalMatchScore = Math.floor(matchScore * this.multiplier * this.baseMultiplier);
+                    this.score += finalMatchScore;
+                    this.animateScoreIncrease(finalMatchScore);
+                    
+                    for (const match of matches) {
+                        const elem = document.querySelector(`[data-row="${match.row}"][data-col="${match.col}"]`);
+                        if (elem) {
+                            const gem = this.board[match.row][match.col];
+                            let wasExplosive = false;
+                            
+                            if (this.explosiveMatches && matches.length >= 4 && gem) {
+                                const sameTypeCount = matches.filter(m => {
+                                    const matchGem = this.board[m.row] && this.board[m.row][m.col];
+                                    return matchGem && matchGem.type === gem.type;
+                                }).length;
+                                
+                                wasExplosive = sameTypeCount >= 4;
+                            }
+                            
+                            if (!wasExplosive) {
+                                elem.style.opacity = '0';
+                                elem.style.transform = 'scale(0)';
+                            }
+                        }
+                    }
+                    
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                    await this.dropGems();
+                    await this.fillEmptySpaces();
+                    
+                    comboMultiplier += 1.0;
+                }
+                
+                // Reset combo display when matches end
+                this.hideComboDisplay();
+            }
+            
+            findMatches() {
+                const matches = [];
+                const visited = new Set();
+                
+                for (let row = 0; row < 7; row++) {
+                    let count = 1;
+                    let currentType = this.board[row][0]?.type;
+                    
+                    for (let col = 1; col < 7; col++) {
+                        if (this.board[row][col]?.type === currentType && currentType) {
+                            count++;
+                        } else {
+                            if (count >= 3) {
+                                for (let i = col - count; i < col; i++) {
+                                    const key = `${row}-${i}`;
+                                    if (!visited.has(key)) {
+                                        matches.push({row, col: i});
+                                        visited.add(key);
+                                    }
+                                }
+                            }
+                            count = 1;
+                            currentType = this.board[row][col]?.type;
+                        }
+                    }
+                    
+                    if (count >= 3) {
+                        for (let i = 7 - count; i < 7; i++) {
+                            const key = `${row}-${i}`;
+                            if (!visited.has(key)) {
+                                matches.push({row, col: i});
+                                visited.add(key);
+                            }
+                        }
+                    }
+                }
+                
+                for (let col = 0; col < 7; col++) {
+                    let count = 1;
+                    let currentType = this.board[0][col]?.type;
+                    
+                    for (let row = 1; row < 7; row++) {
+                        if (this.board[row][col]?.type === currentType && currentType) {
+                            count++;
+                        } else {
+                            if (count >= 3) {
+                                for (let i = row - count; i < row; i++) {
+                                    const key = `${i}-${col}`;
+                                    if (!visited.has(key)) {
+                                        matches.push({row: i, col});
+                                        visited.add(key);
+                                    }
+                                }
+                            }
+                            count = 1;
+                            currentType = this.board[row][col]?.type;
+                        }
+                    }
+                    
+                    if (count >= 3) {
+                        for (let i = 7 - count; i < 7; i++) {
+                            const key = `${i}-${col}`;
+                            if (!visited.has(key)) {
+                                matches.push({row: i, col});
+                                visited.add(key);
+                            }
+                        }
+                    }
+                }
+                
+                return matches;
+            }
+            
+            async dropGems() {
+                for (let col = 0; col < 7; col++) {
+                    let dropDistance = 0;
+                    
+                    for (let row = 6; row >= 0; row--) {
+                        if (this.board[row][col] === null) {
+                            dropDistance++;
+                        } else if (dropDistance > 0) {
+                            this.board[row + dropDistance][col] = this.board[row][col];
+                            this.board[row][col] = null;
+                            
+                            const elem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                            const newElem = document.querySelector(`[data-row="${row + dropDistance}"][data-col="${col}"]`);
+                            
+                            this.updateGemElement(newElem, this.board[row + dropDistance][col]);
+                            newElem.style.transform = `translateY(-${dropDistance * 54}px)`;
+                            newElem.style.opacity = '1';
+                            
+                            elem.style.opacity = '0';
+                            
+                            setTimeout(() => {
+                                newElem.style.transform = '';
+                                newElem.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                            }, 50);
+                        }
+                    }
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
+            async fillEmptySpaces() {
+                for (let col = 0; col < 7; col++) {
+                    for (let row = 0; row < 7; row++) {
+                        if (this.board[row][col] === null) {
+                            const gem = this.createRandomGem();
+                            this.board[row][col] = gem;
+                            
+                            const elem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                            if (elem) {
+                                this.updateGemElement(elem, gem);
+                                elem.style.opacity = '0';
+                                elem.style.transform = 'translateY(-100px)';
+                                
+                                setTimeout(() => {
+                                    elem.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.2s ease';
+                                    elem.style.transform = '';
+                                    elem.style.opacity = '1';
+                                }, col * 50);
+                            }
+                        }
+                    }
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 250));
+            }
+            
+            updateUI() {
+                document.getElementById('scoreDisplay').textContent = this.score;
+                document.getElementById('movesLeft').textContent = this.moves;
+                document.getElementById('currentFloor').textContent = this.floor;
+                document.getElementById('targetScore').textContent = this.targetScore;
+                document.getElementById('multiplier').textContent = this.multiplier.toFixed(1) + 'x';
+                
+                const progress = Math.min(100, (this.score / this.targetScore) * 100);
+                document.getElementById('progressFill').style.width = progress + '%';
+            }
+            
+            checkGameState() {
+                if (this.moves <= 0) {
+                    if (this.score >= this.targetScore) {
+                        this.nextFloor();
+                    } else {
+                        this.showGameOver();
+                    }
+                }
+            }
+            
+            nextFloor() {
+                this.floor++;
+                this.targetScore = Math.floor(this.targetScore * 1.45);
+                this.multiplier += 0.15;
+                this.score = 0;
+                this.displayScore = 0;
+                
+                this.showRelicSelection();
+            }
+            
+            showRelicSelection() {
+                const relicScreen = document.getElementById('relicSelectionScreen');
+                const relicOptions = document.getElementById('relicOptions');
+                
+                const availableRelics = [
+                    { name: '🔥 Fire Crown', desc: '+25% score from Fire gems', type: 'fire_boost', effect: () => { this.fireBoost = 1.25; } },
+                    { name: '❄️ Ice Shard', desc: '+1 extra move per floor', type: 'extra_move', effect: () => { this.bonusMoves = (this.bonusMoves || 0) + 1; } },
+                    { name: '🌿 Nature\'s Blessing', desc: '+25% base score multiplier', type: 'multiplier', effect: () => { this.baseMultiplier = (this.baseMultiplier || 1) + 0.25; } },
+                    { name: '⚡ Lightning Rod', desc: 'Lightning gems worth +25% more', type: 'lightning_boost', effect: () => { this.lightningBoost = 1.25; } },
+                    { name: '🌀 Void Crystal', desc: 'Void gems worth +25% more', type: 'void_boost', effect: () => { this.voidBoost = 1.25; } },
+                    { name: '💎 Gem Forge', desc: 'All gems worth +25% more points', type: 'gem_value', effect: () => { this.gemValueBoost = (this.gemValueBoost || 1) + 0.25; } },
+                    { name: '🔗 Chain Master', desc: 'Combo multiplier grows +25% faster', type: 'combo_boost', effect: () => { this.comboBoost = 1.25; } },
+                    { name: '📉 Score Amplifier', desc: 'Target score reduced by 25%', type: 'score_reduction', effect: () => { this.targetScore = Math.floor(this.targetScore * 0.75); } },
+                    { name: '🍀 Lucky Charm', desc: 'Higher value gems appear more often', type: 'lucky', effect: () => { this.luckyCharm = true; } },
+                    { name: '🔮 Mana Crystal', desc: '+2 extra moves per floor', type: 'mega_moves', effect: () => { this.bonusMoves = (this.bonusMoves || 0) + 2; } },
+                    { name: '🎲 Dice of Fate', desc: '15% chance moves don\'t consume', type: 'lucky_moves', effect: () => { this.diceOfFate = true; } },
+                    { name: '⏰ Time Dilator', desc: 'Target score decreases by 25 each move', type: 'time_decay', effect: () => { this.timeDilator = true; } },
+                    { name: '💥 Explosive Matches', desc: '4+ matches of same gem type explode all adjacent gems for 50% score', type: 'explosive_matches', effect: () => { this.explosiveMatches = true; } },
+                    { name: '🧪 Gem Alchemy', desc: 'Every 3rd match converts all gems of that type to highest value', type: 'gem_alchemy', effect: () => { this.gemAlchemy = true; } },
+                    { name: '🌊 Cascade Master', desc: 'Every 2nd cascade permanently increases base multiplier', type: 'cascade_master', effect: () => { this.cascadeMaster = true; } },
+                    { name: '🕳️ Void Hunger', desc: 'Void matches consume and score from surrounding gems', type: 'void_hunger', effect: () => { this.voidHunger = true; } },
+                    { name: '⚡ Storm Surge', desc: 'Lightning matches strike all Lightning gems on board, scoring them and increasing their value by +5', type: 'storm_surge', effect: () => { this.stormSurge = true; } }
+                ];
+                
+                const newRelics = availableRelics.filter(relic => 
+                    !this.relics.some(owned => owned.type === relic.type)
+                );
+                
+                const selectedRelics = [];
+                
+                if (newRelics.length === 0) {
+                    selectedRelics.push({
+                        name: '🚀 Continue Journey',
+                        desc: 'Continue to the next floor with current relics',
+                        type: 'continue',
+                        effect: () => {}
+                    });
+                } else {
+                    for (let i = 0; i < 3 && newRelics.length > 0; i++) {
+                        const randomIndex = Math.floor(Math.random() * newRelics.length);
+                        selectedRelics.push(newRelics.splice(randomIndex, 1)[0]);
+                    }
+                }
+                
+                relicOptions.innerHTML = '';
+                selectedRelics.forEach((relic) => {
+                    const relicButton = document.createElement('button');
+                    relicButton.className = relic.type === 'continue' ? 'relic-option continue-option' : 'relic-option';
+                    relicButton.innerHTML = `
+                        <div class="relic-option-name">${relic.name}</div>
+                        <div class="relic-option-desc">${relic.desc}</div>
+                    `;
+                    relicButton.onclick = () => this.selectRelic(relic);
+                    relicOptions.appendChild(relicButton);
+                });
+                
+                relicScreen.style.display = 'block';
+            }
+            
+            selectRelic(relic) {
+                if (relic.type !== 'continue') {
+                    this.relics.push(relic);
+                }
+                relic.effect();
+                
+                this.moves = 4 + (this.bonusMoves || 0);
+                
+                document.getElementById('relicSelectionScreen').style.display = 'none';
+                this.createBoard();
+                this.updateUI();
+                this.updateRelicsDisplay();
+                this.initializeScoreDisplay();
+            }
+            
+            updateRelicsDisplay() {
+                const relicsList = document.getElementById('relicsList');
+                relicsList.innerHTML = '';
+                
+                if (this.relics.length === 0) {
+                    relicsList.innerHTML = `
+                        <div class="relic">
+                            <div class="relic-name">Starter Gem</div>
+                            <div class="relic-desc">Basic gem matching power</div>
+                        </div>
+                    `;
+                } else {
+                    this.relics.forEach(relic => {
+                        const relicElement = document.createElement('div');
+                        relicElement.className = 'relic';
+                        relicElement.innerHTML = `
+                            <div class="relic-name">${relic.name}</div>
+                            <div class="relic-desc">${relic.desc}</div>
+                        `;
+                        relicsList.appendChild(relicElement);
+                    });
+                }
+            }
+            
+            showComboIndicator(text) {
+                const indicator = document.getElementById('comboIndicator');
+                indicator.textContent = text;
+                indicator.classList.add('show');
+                
+                setTimeout(() => {
+                    indicator.classList.remove('show');
+                }, 1000);
+            }
+            
+            async processVoidHunger(matches) {
+                const voidMatches = matches.filter(match => {
+                    const gem = this.board[match.row] && this.board[match.row][match.col];
+                    return gem && gem.type === 'void';
+                });
+                
+                if (voidMatches.length > 0) {
+                    if (voidMatches.length >= 5) {
+                        this.showComboIndicator('🕳️ MEGA VOID HUNGER!');
+                    } else if (voidMatches.length >= 4) {
+                        this.showComboIndicator('🕳️ VOID HUNGER!');
+                    } else {
+                        this.showComboIndicator('🕳️ VOID PULL!');
+                    }
+                    this.playSound('void');
+                    
+                    for (const voidMatch of voidMatches) {
+                        let consumedValue = 0;
+                        const directions = [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]];
+                        
+                        for (const [dr, dc] of directions) {
+                            const adjRow = voidMatch.row + dr;
+                            const adjCol = voidMatch.col + dc;
+                            
+                            if (adjRow >= 0 && adjRow < 7 && adjCol >= 0 && adjCol < 7 && this.board[adjRow][adjCol]) {
+                                let scoreMultiplier = 2;
+                                if (voidMatches.length >= 5) {
+                                    scoreMultiplier = 3;
+                                } else if (voidMatches.length >= 4) {
+                                    scoreMultiplier = 2.5;
+                                }
+                                
+                                consumedValue += this.board[adjRow][adjCol].value * scoreMultiplier;
+                                this.board[adjRow][adjCol] = null;
+                                
+                                const consumedElem = document.querySelector(`[data-row="${adjRow}"][data-col="${adjCol}"]`);
+                                if (consumedElem) {
+                                    const animationSpeed = Math.max(0.2, 0.4 - (voidMatches.length * 0.03));
+                                    consumedElem.style.transition = `transform ${animationSpeed}s ease-out, opacity ${animationSpeed}s ease-out`;
+                                    consumedElem.style.transform = 'scale(0.1)';
+                                    consumedElem.style.opacity = '0';
+                                }
+                            }
+                        }
+                        
+                        const voidScore = Math.floor(consumedValue * this.multiplier * this.baseMultiplier);
+                        this.score += voidScore;
+                        this.animateScoreIncrease(voidScore);
+                    }
+                    
+                    const animationDelay = Math.max(200, 350 - (voidMatches.length * 25));
+                    await new Promise(resolve => setTimeout(resolve, animationDelay));
+                }
+            }
+
+            async processStormSurge(matches) {
+    const lightningMatches = matches.filter(match => {
+        const gem = this.board[match.row] && this.board[match.row][match.col];
+        return gem && gem.type === 'lightning';
+    });
+    
+    if (lightningMatches.length > 0) {
+        this.showComboIndicator('⚡ STORM SURGE!');
+        this.playSound('lightning');
+        
+        let totalStormScore = 0;
+        const struckGems = [];
+        
+        // Find all lightning gems on the board and mark them for removal
+        for (let row = 0; row < 7; row++) {
+            for (let col = 0; col < 7; col++) {
+                const gem = this.board[row][col];
+                if (gem && gem.type === 'lightning') {
+                    // Score the gem
+                    totalStormScore += gem.value;
+                    
+                    struckGems.push({row, col});
+                    
+                    // Add visual strike effect
+                    const elem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                    if (elem) {
+                        elem.classList.add('lightning-strike');
+                    }
+                }
+            }
+        }
+        
+        // Add storm score
+        const finalStormScore = Math.floor(totalStormScore * this.multiplier * this.baseMultiplier);
+        this.score += finalStormScore;
+        this.animateScoreIncrease(finalStormScore);
+        
+        // Wait for visual effect
+        await new Promise(resolve => setTimeout(resolve, 600));
+        
+        // Remove all struck lightning gems from the board
+        for (const {row, col} of struckGems) {
+            this.board[row][col] = null;
+            const elem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            if (elem) {
+                elem.classList.remove('lightning-strike');
+                elem.style.opacity = '0';
+                elem.style.transform = 'scale(0)';
+            }
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 200));
+    }
+}
+            
+            showGameOver() {
+                const gameOverScreen = document.getElementById('gameOverScreen');
+                const floorResult = document.getElementById('floorResult');
+                
+                gameOverScreen.querySelector('h2').textContent = 'Game Over!';
+                floorResult.textContent = `Floor ${this.floor} Failed. You needed ${this.targetScore} points but only scored ${this.score}.`;
+                gameOverScreen.style.display = 'block';
+            }
+            
+            async explodeMatchedGems(matches) {
+                for (const match of matches) {
+                    const elem = document.querySelector(`[data-row="${match.row}"][data-col="${match.col}"]`);
+                    if (elem) {
+                        const angle = Math.random() * 2 * Math.PI;
+                        const distance = 400 + Math.random() * 200;
+                        const deltaX = Math.cos(angle) * distance;
+                        const deltaY = Math.sin(angle) * distance;
+                        
+                        const rotation = Math.random() * 720 - 360;
+                        
+                        elem.style.transition = 'transform 0.6s ease-out, opacity 0.5s ease-out';
+                        elem.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg) scale(0.3)`;
+                        elem.style.opacity = '0';
+                        elem.style.zIndex = '50';
+                    }
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 600));
+                
+                for (const match of matches) {
+                    const elem = document.querySelector(`[data-row="${match.row}"][data-col="${match.col}"]`);
+                    if (elem) {
+                        elem.style.transition = '';
+                        elem.style.transform = '';
+                        elem.style.opacity = '0';
+                        elem.style.zIndex = '';
+                    }
+                }
+            }
+            
+            restartGame() {
+                this.score = 0;
+                this.displayScore = 0;
+                this.moves = 4;
+                this.floor = 1;
+                this.targetScore = 800;
+                this.multiplier = 1.0;
+                this.selectedGem = null;
+                this.animating = false;
+                this.relics = [];
+                this.matchCounter = 0;
+                this.cascadeCount = 0;
+                this.currentCombo = 0;
+                
+                this.bonusMoves = 0;
+                this.baseMultiplier = 1;
+                this.fireBoost = 1;
+                this.lightningBoost = 1;
+                this.voidBoost = 1;
+                this.gemValueBoost = 1;
+                this.comboBoost = 1;
+                this.luckyCharm = false;
+                this.diceOfFate = false;
+                this.timeDilator = false;
+                this.explosiveMatches = false;
+                this.gemAlchemy = false;
+                this.cascadeMaster = false;
+                this.voidHunger = false;
+                this.stormSurge = false;
+                this.lightningStrikes = {};
+                
+                document.getElementById('gameOverScreen').style.display = 'none';
+                document.getElementById('relicSelectionScreen').style.display = 'none';
+                this.createBoard();
+                this.updateUI();
+                this.updateRelicsDisplay();
+                this.initializeScoreDisplay();
+            }
+        }
+
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'flex';
+            game = new Gemspire();
+            game.initializeGame();
+        }
+
+        function restartGame() {
+            game.restartGame();
+        }
+
+        function returnToStart() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+        }
+
+        let game;
+
+        window.addEventListener('load', () => {
+            // Game will be initialized when user clicks start
+        });
+    </script>
+</body>
+</html>
