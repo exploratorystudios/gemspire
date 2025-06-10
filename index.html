@@ -2171,6 +2171,45 @@ body {
                 }
             }
 
+			destroyAllAudio() {
+				if (this.sounds) {
+					Object.values(this.sounds).forEach(sound => {
+						sound.pause();
+						sound.currentTime = 0;
+						sound.volume = 0;
+						sound.src = ''; // Clear the source
+						sound.load(); // Force reload empty source
+					});
+					this.sounds = null;
+				}
+				this.currentBgMusic = null;
+			}
+
+			startGameTransition() {
+				// Stop any currently playing background music
+				this.stopBackgroundMusic();
+				
+				// Hide start screen and show game
+				document.getElementById('startScreen').style.display = 'none';
+				document.getElementById('gameContainer').style.display = 'flex';
+				
+				// Transfer audio settings from temp game instance
+				if (window.tempGameForMusic) {
+					window.tempGameForMusic.stopBackgroundMusic();
+				}
+				
+				const audioEnabled = window.tempGameForMusic ? window.tempGameForMusic.audioEnabled : false;
+				
+				// Create new game instance
+				game = new Gemspire();
+				if (audioEnabled) {
+					game.enableAudio();
+				} else {
+					game.disableAudio();
+				}
+				game.initializeGame();
+			}
+
             grantStartingRelics() {
                 const availableRelics = [
                     { name: '🔥 Fire Crown', desc: '+25% score from Fire gems', type: 'fire_boost', effect: () => { this.fireBoost = 1.25; } },
@@ -2462,51 +2501,60 @@ body {
 				};
 			}  
 			
-            initializeSounds() {
-                this.sounds = {
-                    swap: new Audio('swap.mp3'),
-                    clear: new Audio('clear.mp3'),
-                    lightning: new Audio('lightning.mp3'),
-                    void: new Audio('void.mp3'),
-                    explode: new Audio('explode.mp3'),
-                    place: new Audio('place.mp3'),
-                    relic: new Audio('relic.mp3'),
-                    purchase: new Audio('purchase.mp3'),
-                    bg1: new Audio('bg1.mp3'),
-                    title: new Audio('title.mp3'),
-                    lose: new Audio('lose.mp3')
-                };
-                
-                // Set volume levels
-                this.sounds.swap.volume = 0.5;
-                this.sounds.clear.volume = 0.6;
-                this.sounds.place.volume = 0.4;
-                this.sounds.relic.volume = 0.7;
-                this.sounds.purchase.volume = 0.6;
-                this.sounds.lose.volume = 0.8;
-                
-                // Background music settings - START MUTED AND PAUSED
-                this.sounds.bg1.volume = 0;
-                this.sounds.bg1.loop = true;
-                this.sounds.title.volume = 0;
-                this.sounds.title.loop = true;
-                
-                // Audio control state
-                this.audioEnabled = false;
-                this.bgMusicVolume = 0.3;
-                this.titleMusicVolume = 0.4;
-                this.audioPermissionGiven = false;
-                
-                // Preload sounds
-                Object.values(this.sounds).forEach(sound => {
-                    sound.preload = 'auto';
-                    sound.addEventListener('error', () => {
-                        console.log(`Sound file not found: ${sound.src}`);
-                    });
-                });
-                
-                this.currentBgMusic = null;
-            }
+			initializeSounds() {
+				// First destroy any existing sounds
+				this.destroyAllAudio();
+				
+				this.sounds = {
+					swap: new Audio('swap.mp3'),
+					clear: new Audio('clear.mp3'),
+					lightning: new Audio('lightning.mp3'),
+					void: new Audio('void.mp3'),
+					explode: new Audio('explode.mp3'),
+					place: new Audio('place.mp3'),
+					relic: new Audio('relic.mp3'),
+					purchase: new Audio('purchase.mp3'),
+					bg1: new Audio('bg1.mp3'),
+					title: new Audio('title.mp3'),
+					lose: new Audio('lose.mp3')
+				};
+				
+				// Add unique query parameter to prevent caching issues
+				const timestamp = Date.now();
+				Object.keys(this.sounds).forEach(key => {
+					this.sounds[key].src = this.sounds[key].src + '?t=' + timestamp;
+				});
+				
+				// Set volume levels
+				this.sounds.swap.volume = 0.5;
+				this.sounds.clear.volume = 0.6;
+				this.sounds.place.volume = 0.4;
+				this.sounds.relic.volume = 0.7;
+				this.sounds.purchase.volume = 0.6;
+				this.sounds.lose.volume = 0.8;
+				
+				// Background music settings - START MUTED AND PAUSED
+				this.sounds.bg1.volume = 0;
+				this.sounds.bg1.loop = true;
+				this.sounds.title.volume = 0;
+				this.sounds.title.loop = true;
+				
+				// Audio control state
+				this.audioEnabled = false;
+				this.bgMusicVolume = 0.3;
+				this.titleMusicVolume = 0.4;
+				this.audioPermissionGiven = false;
+				
+				// Preload sounds
+				Object.values(this.sounds).forEach(sound => {
+					sound.preload = 'auto';
+					sound.addEventListener('error', () => {
+						console.log(`Sound file not found: ${sound.src}`);
+					});
+				});
+				
+				this.currentBgMusic = null;
+			}
             
             enableAudio() {
                 this.audioEnabled = true;
@@ -4476,41 +4524,86 @@ body {
             window.tempGameForMusic.showIngameAudioToggle();
         }
 
-        function startGame() {
-            document.getElementById('startScreen').style.display = 'none';
-            document.getElementById('gameContainer').style.display = 'flex';
-            
-            // Stop title music and transfer audio settings to main game instance
-            if (window.tempGameForMusic) {
-                window.tempGameForMusic.stopBackgroundMusic();
-            }
-            
-            const audioEnabled = window.tempGameForMusic ? window.tempGameForMusic.audioEnabled : false;
-            
-            game = new Gemspire();
-            if (audioEnabled) {
-                game.enableAudio();
-            } else {
-                game.disableAudio();
-            }
-            game.initializeGame();
-        }
+		function startGame() {
+			console.log('startGame called - DESTROYING all audio');
+			
+			// Store audio preference before destroying
+			const shouldEnableAudio = window.tempGameForMusic ? window.tempGameForMusic.audioPermissionGiven : false;
+			
+			// COMPLETELY DESTROY temp game audio
+			if (window.tempGameForMusic) {
+				window.tempGameForMusic.destroyAllAudio();
+				window.tempGameForMusic = null;
+			}
+			
+			// COMPLETELY DESTROY existing game audio
+			if (window.game) {
+				window.game.destroyAllAudio();
+				window.game = null;
+			}
+			
+			// Hide start screen and show game
+			document.getElementById('startScreen').style.display = 'none';
+			document.getElementById('gameContainer').style.display = 'flex';
+			
+			// Wait for complete audio destruction
+			setTimeout(() => {
+				console.log('Creating completely new game with fresh audio');
+				
+				// Create completely new game instance with fresh audio
+				window.game = new Gemspire();
+				
+				if (shouldEnableAudio) {
+					window.game.enableAudio();
+				} else {
+					window.game.disableAudio();
+				}
+				
+				window.game.initializeGame();
+				console.log('New game audio state:', window.game.currentBgMusic);
+			}, 500); // Longer delay for complete cleanup
+		}
 
         function restartGame() {
             game.restartGame();
         }
 
-        function returnToStart() {
-            document.getElementById('gameOverScreen').style.display = 'none';
-            document.getElementById('gameContainer').style.display = 'none';
-            document.getElementById('startScreen').style.display = 'flex';
-            
-            // Hide ingame audio toggle and play title music
-            if (game) {
-                game.hideIngameAudioToggle();
-                game.playBackgroundMusic('title');
-            }
-        }
+		function returnToStart() {
+			console.log('returnToStart called - DESTROYING all audio');
+			
+			// Store audio preference before destroying
+			const shouldEnableAudio = window.game ? window.game.audioEnabled : false;
+			
+			// COMPLETELY DESTROY game audio
+			if (window.game) {
+				window.game.destroyAllAudio();
+				window.game.hideIngameAudioToggle();
+				window.game = null;
+			}
+			
+			// Show start screen
+			document.getElementById('gameOverScreen').style.display = 'none';
+			document.getElementById('gameContainer').style.display = 'none';
+			document.getElementById('startScreen').style.display = 'flex';
+			
+			// Wait for complete audio destruction, then create fresh title screen
+			setTimeout(() => {
+				console.log('Creating fresh temp game for title screen');
+				
+				// Create completely new temp game for title screen
+				window.tempGameForMusic = new Gemspire();
+				
+				if (shouldEnableAudio) {
+					window.tempGameForMusic.enableAudio();
+					window.tempGameForMusic.playBackgroundMusic('title');
+				} else {
+					window.tempGameForMusic.disableAudio();
+				}
+				
+				window.tempGameForMusic.showIngameAudioToggle();
+				console.log('Title screen audio state:', window.tempGameForMusic.currentBgMusic);
+			}, 500); // Longer delay for complete cleanup
+		}
 
         function openOptionsMenu() {
             if (game) {
