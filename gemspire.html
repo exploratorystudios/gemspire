@@ -4665,10 +4665,12 @@ body {
 
 		function restartGame() {
 			console.log('Global restartGame called');
-			if (window.game) {
+			if (window.game && typeof window.game.restartGame === 'function') {
 				window.game.restartGame();
 			} else {
-				console.error('No game instance found!');
+				console.error('No game instance found or restartGame method missing!');
+				// Fallback - try to restart manually
+				returnToStart();
 			}
 		}
 
