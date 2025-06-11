@@ -3469,19 +3469,46 @@ body {
 				const scoreDisplay = document.getElementById('scoreDisplay');
 				if (!scoreDisplay) return;
 
-				// Initialize popup queue if it doesn't exist
-				if (!this.scorePopupQueue) {
-					this.scorePopupQueue = [];
-					this.isProcessingPopups = false;
+				// Initialize stagger counter if it doesn't exist
+				if (!this.popupStaggerCount) {
+					this.popupStaggerCount = 0;
 				}
 
-				// Add to queue
-				this.scorePopupQueue.push(amount);
+				// Create popup with slight stagger delay
+				setTimeout(() => {
+					const scorePopup = document.createElement('div');
+					scorePopup.className = 'score-popup';
+					scorePopup.textContent = `+${Math.floor(amount)}`;
+					scorePopup.style.position = 'fixed';
+					scorePopup.style.zIndex = '9999';
+					
+					const rect = scoreDisplay.getBoundingClientRect();
+					const textWidth = scoreDisplay.offsetWidth;
 
-				// Start processing if not already doing so
-				if (!this.isProcessingPopups) {
-					this.processScorePopupQueue();
-				}
+					// Add slight random offset to prevent exact overlap
+					const randomOffset = (Math.random() - 0.5) * 20;
+					scorePopup.style.left = (rect.left + textWidth - 135 + randomOffset) + 'px';
+					scorePopup.style.top = (rect.top + 5 + (this.popupStaggerCount * 2)) + 'px';
+					
+					document.body.appendChild(scorePopup);
+					
+					scorePopup.offsetHeight;
+					scorePopup.classList.add('animate');
+					
+					// Clean up after animation
+					setTimeout(() => {
+						if (scorePopup.parentNode) {
+							scorePopup.parentNode.removeChild(scorePopup);
+						}
+					}, 1200);
+					
+				}, this.popupStaggerCount * 50); // 50ms stagger between each popup
+
+				// Increment stagger counter and reset after a short delay
+				this.popupStaggerCount++;
+				setTimeout(() => {
+					this.popupStaggerCount = 0;
+				}, 100);
 			}
 
 			async processScorePopupQueue() {
