@@ -1880,10 +1880,10 @@ body {
     <div class="purchase-confirmation" id="purchaseConfirmation">
         <div class="confirmation-title">Confirm Purchase</div>
         <div class="confirmation-text" id="confirmationText"></div>
-        <div class="confirmation-buttons">
-            <button class="confirm-btn" onclick="game.confirmPurchase()">Purchase</button>
-            <button class="cancel-btn" onclick="game.cancelPurchase()">Cancel</button>
-        </div>
+		<div class="confirmation-buttons">
+			<button class="confirm-btn" onclick="(window.game || window.tempGameForMusic).confirmPurchase()">Purchase</button>
+			<button class="cancel-btn" onclick="(window.game || window.tempGameForMusic).cancelPurchase()">Cancel</button>
+		</div>
     </div>
 
     <!-- Gem Selection Modal -->
@@ -2809,10 +2809,10 @@ body {
                     <div class="shop-item-desc">${item.desc}</div>
                     <div class="shop-item-footer">
                         ${item.stackable ? `<div class="shop-item-quantity">Owned: ${quantity}</div>` : '<div></div>'}
-                        <button class="shop-buy-btn" ${!canPurchase ? 'disabled' : ''} 
-                                onclick="game.initiatePurchase('${item.id}')">
-                            ${isOwned && !item.stackable ? 'OWNED' : 'BUY'}
-                        </button>
+						<button class="shop-buy-btn" ${!canPurchase ? 'disabled' : ''} 
+								onclick="(window.game || window.tempGameForMusic).initiatePurchase('${item.id}')">
+							${isOwned && !item.stackable ? 'OWNED' : 'BUY'}
+						</button>
                     </div>
                 `;
                 
