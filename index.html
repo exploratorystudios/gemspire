@@ -3469,46 +3469,17 @@ body {
 				const scoreDisplay = document.getElementById('scoreDisplay');
 				if (!scoreDisplay) return;
 
-				// Initialize stagger counter if it doesn't exist
-				if (!this.popupStaggerCount) {
-					this.popupStaggerCount = 0;
+				// Initialize queue if it doesn't exist
+				if (!this.scorePopupQueue) {
+					this.scorePopupQueue = [];
+					this.isProcessingPopups = false;
 				}
 
-				// Create popup with slight stagger delay
-				setTimeout(() => {
-					const scorePopup = document.createElement('div');
-					scorePopup.className = 'score-popup';
-					scorePopup.textContent = `+${Math.floor(amount)}`;
-					scorePopup.style.position = 'fixed';
-					scorePopup.style.zIndex = '9999';
-					
-					const rect = scoreDisplay.getBoundingClientRect();
-					const textWidth = scoreDisplay.offsetWidth;
+				this.scorePopupQueue.push(amount);
 
-					// Add slight random offset to prevent exact overlap
-					const randomOffset = (Math.random() - 0.5) * 20;
-					scorePopup.style.left = (rect.left + textWidth - 135 + randomOffset) + 'px';
-					scorePopup.style.top = (rect.top + 5 + (this.popupStaggerCount * 2)) + 'px';
-					
-					document.body.appendChild(scorePopup);
-					
-					scorePopup.offsetHeight;
-					scorePopup.classList.add('animate');
-					
-					// Clean up after animation
-					setTimeout(() => {
-						if (scorePopup.parentNode) {
-							scorePopup.parentNode.removeChild(scorePopup);
-						}
-					}, 1200);
-					
-				}, this.popupStaggerCount * 50); // 50ms stagger between each popup
-
-				// Increment stagger counter and reset after a short delay
-				this.popupStaggerCount++;
-				setTimeout(() => {
-					this.popupStaggerCount = 0;
-				}, 100);
+				if (!this.isProcessingPopups) {
+					this.processScorePopupQueue();
+				}
 			}
 
 			async processScorePopupQueue() {
@@ -3522,7 +3493,7 @@ body {
 
 				const scoreDisplay = document.getElementById('scoreDisplay');
 				if (!scoreDisplay) {
-					this.processScorePopupQueue(); // Continue with next
+					this.processScorePopupQueue();
 					return;
 				}
 
@@ -3543,15 +3514,17 @@ body {
 				scorePopup.offsetHeight;
 				scorePopup.classList.add('animate');
 				
-				// Wait for animation to complete before processing next popup
-				await new Promise(resolve => setTimeout(resolve, 1200));
-				
-				if (scorePopup.parentNode) {
-					scorePopup.parentNode.removeChild(scorePopup);
-				}
+				// Clean up after animation
+				setTimeout(() => {
+					if (scorePopup.parentNode) {
+						scorePopup.parentNode.removeChild(scorePopup);
+					}
+				}, 1200);
 
-				// Process next popup in queue
-				this.processScorePopupQueue();
+				// Process next popup much faster - only 150ms delay instead of 1200ms
+				setTimeout(() => {
+					this.processScorePopupQueue();
+				}, 150);
 			}
 
             updateComboDisplay() {
