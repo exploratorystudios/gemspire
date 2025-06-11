@@ -1917,7 +1917,10 @@ body {
 				this.matchCounter = 0;
 				this.currentCombo = 0;
 				this.isCurrentlyScoring = false;
-				
+
+				this.scorePopupQueue = [];
+				this.isProcessingPopups = false;
+	
 				// Basic relic effects
 				this.bonusMoves = 0;
 				this.baseMultiplier = 1;
@@ -3462,33 +3465,67 @@ body {
                 requestAnimationFrame(animateScore);
             }
 
-            showScorePopup(amount) {
-                const scoreDisplay = document.getElementById('scoreDisplay');
-                if (!scoreDisplay) return;
+			showScorePopup(amount) {
+				const scoreDisplay = document.getElementById('scoreDisplay');
+				if (!scoreDisplay) return;
 
-                const scorePopup = document.createElement('div');
-                scorePopup.className = 'score-popup';
-                scorePopup.textContent = `+${Math.floor(amount)}`;
-                scorePopup.style.position = 'fixed';
-                scorePopup.style.zIndex = '9999';
-                
-                const rect = scoreDisplay.getBoundingClientRect();
-                const textWidth = scoreDisplay.offsetWidth;
+				// Initialize popup queue if it doesn't exist
+				if (!this.scorePopupQueue) {
+					this.scorePopupQueue = [];
+					this.isProcessingPopups = false;
+				}
 
-                scorePopup.style.left = (rect.left + textWidth - 135) + 'px';
-                scorePopup.style.top = (rect.top + 5) + 'px';
-                
-                document.body.appendChild(scorePopup);
-                
-                scorePopup.offsetHeight;
-                scorePopup.classList.add('animate');
-                
-                setTimeout(() => {
-                    if (scorePopup.parentNode) {
-                        scorePopup.parentNode.removeChild(scorePopup);
-                    }
-                }, 1200);
-            }
+				// Add to queue
+				this.scorePopupQueue.push(amount);
+
+				// Start processing if not already doing so
+				if (!this.isProcessingPopups) {
+					this.processScorePopupQueue();
+				}
+			}
+
+			async processScorePopupQueue() {
+				if (this.scorePopupQueue.length === 0) {
+					this.isProcessingPopups = false;
+					return;
+				}
+
+				this.isProcessingPopups = true;
+				const amount = this.scorePopupQueue.shift();
+
+				const scoreDisplay = document.getElementById('scoreDisplay');
+				if (!scoreDisplay) {
+					this.processScorePopupQueue(); // Continue with next
+					return;
+				}
+
+				const scorePopup = document.createElement('div');
+				scorePopup.className = 'score-popup';
+				scorePopup.textContent = `+${Math.floor(amount)}`;
+				scorePopup.style.position = 'fixed';
+				scorePopup.style.zIndex = '9999';
+				
+				const rect = scoreDisplay.getBoundingClientRect();
+				const textWidth = scoreDisplay.offsetWidth;
+
+				scorePopup.style.left = (rect.left + textWidth - 135) + 'px';
+				scorePopup.style.top = (rect.top + 5) + 'px';
+				
+				document.body.appendChild(scorePopup);
+				
+				scorePopup.offsetHeight;
+				scorePopup.classList.add('animate');
+				
+				// Wait for animation to complete before processing next popup
+				await new Promise(resolve => setTimeout(resolve, 1200));
+				
+				if (scorePopup.parentNode) {
+					scorePopup.parentNode.removeChild(scorePopup);
+				}
+
+				// Process next popup in queue
+				this.processScorePopupQueue();
+			}
 
             updateComboDisplay() {
                 const comboDisplay = document.getElementById('comboDisplay');
@@ -3579,13 +3616,13 @@ body {
 				
 				// After all gems are placed, create wave effect
 				const totalPlacementTime = (7 * 7 - 1) * 80 + 600; // Last gem delay + animation time
-				
+
 				setTimeout(() => {
 					this.createWaveEffect();
 				}, totalPlacementTime + 200);
-				
-				// Re-enable gem switching after wave completes
-				const waveCompletionTime = totalPlacementTime + 200 + (6 + 6) * 60 + 400 + (49 * 15) + 500; // Full animation duration
+
+				// Re-enable gem switching after wave completes (updated timing)
+				const waveCompletionTime = totalPlacementTime + 200 + (6 + 6) * 30 + 200 + (49 * 8) + 250; // Updated for faster animation
 				setTimeout(() => {
 					this.animating = false;
 				}, waveCompletionTime);
@@ -3605,44 +3642,44 @@ body {
 					for (let col = 0; col < 7; col++) {
 						const gem = gems[row * 7 + col];
 						if (gem) {
-							// Calculate delay for bottom-right to top-left wave
-							const waveDelay = ((6 - row) + (6 - col)) * 60; // Inverted coordinates for bottom-right start
+							// Calculate delay for bottom-right to top-left wave (10% slower)
+							const waveDelay = ((6 - row) + (6 - col)) * 33; // Changed from 30 to 33
 							
 							setTimeout(() => {
-								// Wave effect - brief upward movement
-								gem.style.transition = 'transform 0.3s ease-out';
+								// Wave effect - brief upward movement (10% slower)
+								gem.style.transition = 'transform 0.165s ease-out'; // Changed from 0.15s to 0.165s
 								gem.style.transform = 'translateY(-15px) scale(1.05)';
 								
 								setTimeout(() => {
-									// Return to normal position with wobble
-									gem.style.transition = 'transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+									// Return to normal position with wobble (10% slower)
+									gem.style.transition = 'transform 0.22s cubic-bezier(0.68, -0.55, 0.265, 1.55)'; // Changed from 0.2s to 0.22s
 									gem.style.transform = 'translateY(0) scale(1)';
-								}, 150);
+								}, 83); // Changed from 75 to 83
 							}, waveDelay);
 						}
 					}
 				}
 				
-				// Final settling wobble for all gems
+				// Final settling wobble for all gems (10% slower)
 				setTimeout(() => {
 					gems.forEach((gem, index) => {
 						setTimeout(() => {
-							gem.style.transition = 'transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+							gem.style.transition = 'transform 0.275s cubic-bezier(0.68, -0.55, 0.265, 1.55)'; // Changed from 0.25s to 0.275s
 							gem.style.transform = 'scale(1.02)';
 							
 							setTimeout(() => {
-								gem.style.transition = 'transform 0.3s ease-out';
+								gem.style.transition = 'transform 0.165s ease-out'; // Changed from 0.15s to 0.165s
 								gem.style.transform = 'scale(1)';
 								
 								// Clear any inline styles after animation
 								setTimeout(() => {
 									gem.style.transition = '';
 									gem.style.transform = '';
-								}, 300);
-							}, 200);
-						}, index * 15); // Staggered wobble
+								}, 165); // Changed from 150 to 165
+							}, 110); // Changed from 100 to 110
+						}, index * 9); // Changed from 8 to 9
 					});
-				}, (6 + 6) * 60 + 400); // After wave completes
+				}, (6 + 6) * 33 + 220); // Updated calculation for new timing
 			}
 
             generateValidBoard() {
