@@ -1218,7 +1218,9 @@ body {
     border-radius: 20px;
     border: 3px solid #7c3aed;
     box-shadow: 0 0 50px rgba(124, 58, 237, 0.5);
-    max-width: 500px;
+    max-width: 700px; /* Increase this if needed */
+    width: 90%; /* Add this to make it responsive */
+    margin: 0 auto; /* Center the container */
 }
 
 .audio-permission-title {
@@ -1229,6 +1231,7 @@ body {
     -webkit-text-fill-color: transparent;
     margin-bottom: 20px;
     animation: titleGlow 3s ease-in-out infinite;
+    white-space: nowrap; /* Add this line to prevent wrapping */
 }
 
 .audio-permission-text {
