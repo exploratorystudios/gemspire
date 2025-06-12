@@ -1918,6 +1918,8 @@ body {
 				this.currentCombo = 0;
 				this.isCurrentlyScoring = false;
 
+				this.originalTargetScore = null;
+
 				this.scorePopupQueue = [];
 				this.isProcessingPopups = false;
 	
@@ -2242,14 +2244,8 @@ body {
 					return;
 				}
 				
-				// Consume one use of the transmuter from both active boosters and run boosters
+				// Consume one use ONLY from active boosters
 				this.activeBoosters['gem_transmuter']--;
-				
-				// Also decrement from the runBoosters inventory
-				if (this.runBoosters['gem_transmuter'] > 0) {
-					this.runBoosters['gem_transmuter']--;
-					this.saveRunBoosters();
-				}
 				
 				// If no more uses left, remove from active boosters
 				if (this.activeBoosters['gem_transmuter'] <= 0) {
@@ -2260,7 +2256,7 @@ body {
 				const newGem = {
 					type: newGemType,
 					symbol: this.gemSymbols[newGemType],
-					value: Math.floor(Math.random() * 25) + 40, // Give it a decent value
+					value: Math.floor(Math.random() * 25) + 40,
 					isThunderbolt: false,
 					strikeCount: 0
 				};
@@ -2298,7 +2294,8 @@ body {
 				
 				// Play a sound effect
 				this.playSound('relic');
-			}			
+			}
+			
             showCrystalGain(amount) {
                 const crystalDisplay = document.getElementById('crystalAmount');
                 if (!crystalDisplay) return;
@@ -2379,7 +2376,7 @@ body {
 						{
 							id: 'gem_transmuter',
 							name: '🔄 Gem Transmuter',
-							desc: 'Convert any gem type to another (3 uses per run)',
+							desc: 'Convert any gem type to another (1 uses per booster)',
 							price: 3800,
 							rarity: 'common',
 							type: 'Run Booster'
@@ -2387,7 +2384,7 @@ body {
 						{
 							id: 'score_shield',
 							name: '🛡️ Score Shield',
-							desc: 'Reduce target score by 50% for next floor',
+							desc: 'Reduce target score by 50% for current floor',
 							price: 6000,
 							rarity: 'rare',
 							type: 'Run Booster'
@@ -2843,6 +2840,7 @@ body {
 					console.log('Not in game, shop closed without relic selection');
 				}
 			}
+			
             actuallyShowRelicSelection() {
                 const relicScreen = document.getElementById('relicSelectionScreen');
                 const relicOptions = document.getElementById('relicOptions');
@@ -3308,51 +3306,64 @@ body {
                 this.updateAvailableBoostersDisplay();
             }
 
-            updateAvailableBoostersDisplay() {
-                const panel = document.getElementById('availableBoostersPanel');
-                const buttonsContainer = document.getElementById('availableBoosterButtons');
-                
-                if (!panel || !buttonsContainer) return;
-                
-                buttonsContainer.innerHTML = '';
-                
-                let hasAvailableBoosters = false;
-                for (const boosterId in this.runBoosters) {
-                    if (this.runBoosters[boosterId] > 0) {
-                        hasAvailableBoosters = true;
-                        break;
-                    }
-                }
-                
-                if (hasAvailableBoosters) {
-                    panel.style.display = 'block';
-                    
-                    for (const boosterId in this.runBoosters) {
-                        if (this.runBoosters[boosterId] > 0) {
-                            const item = this.shopItems.boosters.find(b => b.id === boosterId);
-                            if (item) {
-                                const button = document.createElement('button');
-                                button.className = 'booster-btn';
-                                button.innerHTML = `
-                                    <div>${item.name}</div>
-                                    <div class="booster-description">${item.desc}</div>
-                                `;
-                                button.dataset.boosterId = boosterId;
-                                button.onclick = () => this.activateBooster(boosterId);
-                                
-                                const countSpan = document.createElement('span');
-                                countSpan.className = 'booster-count';
-                                countSpan.textContent = this.runBoosters[boosterId];
-                                button.appendChild(countSpan);
-                                
-                                buttonsContainer.appendChild(button);
-                            }
-                        }
-                    }
-                } else {
-                    panel.style.display = 'none';
-                }
-            }
+			updateAvailableBoostersDisplay() {
+				const panel = document.getElementById('availableBoostersPanel');
+				const buttonsContainer = document.getElementById('availableBoosterButtons');
+				
+				if (!panel || !buttonsContainer) return;
+				
+				buttonsContainer.innerHTML = '';
+				
+				let hasAvailableBoosters = false;
+				for (const boosterId in this.runBoosters) {
+					if (this.runBoosters[boosterId] > 0) {
+						hasAvailableBoosters = true;
+						break;
+					}
+				}
+				
+				if (hasAvailableBoosters) {
+					panel.style.display = 'block';
+					
+					for (const boosterId in this.runBoosters) {
+						if (this.runBoosters[boosterId] > 0) {
+							const item = this.shopItems.boosters.find(b => b.id === boosterId);
+							if (item) {
+								const button = document.createElement('button');
+								button.className = 'booster-btn';
+								
+								// Check if score shield is already used this floor
+								const isScoreShieldUsed = boosterId === 'score_shield' && this.activeBoosters['score_shield_used_this_floor'];
+								
+								if (isScoreShieldUsed) {
+									button.disabled = true;
+									button.innerHTML = `
+										<div>${item.name} (Used this floor)</div>
+										<div class="booster-description">${item.desc}</div>
+									`;
+								} else {
+									button.innerHTML = `
+										<div>${item.name}</div>
+										<div class="booster-description">${item.desc}</div>
+									`;
+									button.onclick = () => this.activateBooster(boosterId);
+								}
+								
+								button.dataset.boosterId = boosterId;
+								
+								const countSpan = document.createElement('span');
+								countSpan.className = 'booster-count';
+								countSpan.textContent = this.runBoosters[boosterId];
+								button.appendChild(countSpan);
+								
+								buttonsContainer.appendChild(button);
+							}
+						}
+					}
+				} else {
+					panel.style.display = 'none';
+				}
+			}
 			
 			activateBooster(boosterId) {
 				if (!this.runBoosters[boosterId] || this.runBoosters[boosterId] <= 0) return;
@@ -3360,43 +3371,80 @@ body {
 				const item = this.shopItems.boosters.find(b => b.id === boosterId);
 				if (!item) return;
 				
-				// For gem_transmuter, we'll handle the charge consumption differently
-				if (boosterId === 'gem_transmuter') {
-					// Set the transmuter mode but don't consume charges yet
-					// We'll consume one charge per actual transmutation
-					if (!this.activeBoosters['gem_transmuter']) {
-						this.activeBoosters['gem_transmuter'] = this.runBoosters[boosterId];
-						this.showComboIndicator('🔄 GEM TRANSMUTER READY! Click any gem to transmute!');
-						this.updateBoostersDisplay();
-					}
+				// Check if booster is already active
+				if (this.activeBoosters[boosterId] && this.activeBoosters[boosterId] > 0) {
+					this.showComboIndicator('⚠️ Booster already active!');
 					return;
 				}
 				
-				// For other boosters, consume as before
+				// Consume one booster from inventory
 				this.runBoosters[boosterId]--;
 				this.saveRunBoosters();
 				
-				// Apply the booster effect
+				// Apply the booster effect based on type
 				switch (boosterId) {
+					case 'gem_transmuter':
+						// Give 1 transmutation use
+						this.activeBoosters['gem_transmuter'] = 1;
+						this.showComboIndicator('🔄 GEM TRANSMUTER READY! (1 use)');
+						break;
+						
 					case 'lucky_streak':
+						// Give 3 lucky match chances
 						this.activeBoosters['lucky_streak'] = 3;
-						this.showComboIndicator('🍀 LUCKY STREAK ACTIVATED!');
+						this.showComboIndicator('🍀 LUCKY STREAK ACTIVATED! (3 matches)');
 						break;
 						
 					case 'score_shield':
-						this.targetScore = Math.floor(this.targetScore * 0.5);
-						this.showComboIndicator('🛡️ SCORE SHIELD ACTIVATED!');
+						// Check if already used this floor
+						if (this.activeBoosters['score_shield_used_this_floor']) {
+							this.showComboIndicator('🛡️ Score Shield already used this floor!');
+							return; // Don't consume the booster
+						}
+						
+						// Store the original target score if not already stored
+						if (!this.originalTargetScore) {
+							this.originalTargetScore = this.targetScore;
+						}
+						
+						// Apply temporary reduction
+						this.targetScore = Math.floor(this.originalTargetScore * 0.5);
+						this.activeBoosters['score_shield_used_this_floor'] = true;
+						this.showComboIndicator('🛡️ SCORE SHIELD ACTIVATED! (This floor only)');
 						this.updateUI();
 						break;
 						
 					case 'cascade_catalyst':
+						// Give 1 guaranteed cascade
 						this.activeBoosters['cascade_catalyst'] = 1;
-						this.showComboIndicator('🌊 CASCADE CATALYST PRIMED!');
+						this.showComboIndicator('🌊 CASCADE CATALYST PRIMED! (1 use)');
 						break;
 				}
 				
 				this.updateBoostersDisplay();
 			}
+
+			resetBoosterCooldowns() {
+				// Reset score shield usage for new floor
+				if (this.activeBoosters['score_shield_used_this_floor']) {
+					delete this.activeBoosters['score_shield_used_this_floor'];
+				}
+				
+				// Reset target score to normal calculation for new floor
+				this.originalTargetScore = null;
+				
+				this.updateBoostersDisplay();
+			}
+
+			resetMatchCooldowns() {
+				// Reset cascade catalyst cooldown after each match
+				if (this.activeBoosters['cascade_catalyst'] === -1) {
+					delete this.activeBoosters['cascade_catalyst'];
+				}
+				
+				this.updateBoostersDisplay();
+			}
+
             applyGemTheme() {
                 if (this.purchasedUpgrades['gem_theme_neon']) {
                     const gems = document.querySelectorAll('.gem');
@@ -3861,30 +3909,40 @@ body {
                 this.moves--;
                 document.getElementById('movesLeft').textContent = this.moves;
 
-                // Check for lucky streak booster
-                if (this.activeBoosters['lucky_streak'] && this.activeBoosters['lucky_streak'] > 0) {
-                    if (Math.random() < 0.5) {
-                        this.moves++; // Refund the move
-                        this.activeBoosters['lucky_streak']--;
-                        this.showComboIndicator('🍀 LUCKY STREAK!');
-                        
-                        if (this.activeBoosters['lucky_streak'] <= 0) {
-                            delete this.activeBoosters['lucky_streak'];
-                        }
-                        this.updateBoostersDisplay();
-                    }
-                }
+				// Check for lucky streak booster
+				if (this.activeBoosters['lucky_streak'] && this.activeBoosters['lucky_streak'] > 0) {
+					// Always consume one use
+					this.activeBoosters['lucky_streak']--;
+					
+					if (Math.random() < 0.5) {
+						this.moves++; // Refund the move
+						const remainingUses = this.activeBoosters['lucky_streak'];
+						if (remainingUses > 0) {
+							this.showComboIndicator(`🍀 LUCKY STREAK! (${remainingUses} left)`);
+						} else {
+							this.showComboIndicator('🍀 LUCKY STREAK! (expired)');
+							delete this.activeBoosters['lucky_streak'];
+						}
+					} else {
+						const remainingUses = this.activeBoosters['lucky_streak'];
+						if (remainingUses > 0) {
+							this.showComboIndicator(`🍀 LUCK FAILED! (${remainingUses} left)`);
+						} else {
+							this.showComboIndicator('🍀 LUCK FAILED! (expired)');
+							delete this.activeBoosters['lucky_streak'];
+						}
+					}
+					
+					this.updateBoostersDisplay();
+				}
 
-                // Check for cascade catalyst booster
-                if (this.activeBoosters['cascade_catalyst'] && this.activeBoosters['cascade_catalyst'] > 0) {
-                    // Force a cascade by creating additional matches
-                    this.activeBoosters['cascade_catalyst']--;
-                    if (this.activeBoosters['cascade_catalyst'] <= 0) {
-                        delete this.activeBoosters['cascade_catalyst'];
-                    }
-                    this.showComboIndicator('🌊 CASCADE CATALYST!');
-                    this.updateBoostersDisplay();
-                }
+				// Check for cascade catalyst booster
+				if (this.activeBoosters['cascade_catalyst'] && this.activeBoosters['cascade_catalyst'] > 0) {
+					// Set cooldown until next match
+					this.activeBoosters['cascade_catalyst'] = -1;
+					this.showComboIndicator('🌊 CASCADE CATALYST TRIGGERED! (Cooldown until next match)');
+					this.updateBoostersDisplay();
+				}
                 
                 if (this.diceOfFate && Math.random() < 0.15) {
                     this.showComboIndicator('🎲 LUCKY! FREE MOVE!');
@@ -3913,6 +3971,7 @@ body {
                 this.updateUI();
                 this.checkGameState();
                 this.animating = false;
+				this.resetMatchCooldowns();
             }
 
             updateGemElement(element, gem) {
@@ -3962,18 +4021,24 @@ body {
 
 			nextFloor() {
 				this.floor++;
-				this.targetScore = Math.floor(this.targetScore * 1.45);
+				
+				// Calculate NEW target score based on floor progression (not reduced score)
+				const baseTargetScore = Math.floor(800 * Math.pow(1.45, this.floor - 1));
+				this.targetScore = baseTargetScore;
 				this.multiplier += 0.15;
 				
 				// Handle score overflow if purchased
 				let carryoverScore = 0;
 				if (this.purchasedUpgrades['score_overflow'] && this.score > this.targetScore) {
 					const excess = this.score - this.targetScore;
-					carryoverScore = Math.floor(excess * 0.01); // Only 1% carries over
+					carryoverScore = Math.floor(excess * 0.01);
 				}
 				
 				this.score = carryoverScore;
 				this.displayScore = carryoverScore;
+				
+				// Reset floor-based cooldowns AFTER setting new target
+				this.resetBoosterCooldowns();
 				
 				this.showRelicSelection();
 			}
@@ -4573,6 +4638,8 @@ body {
 				this.cascadeCount = 0;
 				this.currentCombo = 0;
 				this.isCurrentlyScoring = false;
+				
+				this.originalTargetScore = null;
 				
 				// Reset all relic effects
 				this.bonusMoves = 0;
