@@ -2552,6 +2552,14 @@ body {
 							type: 'Prestige Upgrade'
 						},
 						{
+							id: 'arcane_amplifier',
+							name: '💠 Arcane Amplifier',
+							desc: 'Increase crystal gain by 500%',
+							price: 150000,
+							rarity: 'legendary',
+							type: 'Prestige Upgrade'
+						},
+						{
 							id: 'score_overflow',
 							name: '♾️ Score Overflow',
 							desc: 'Carry 1% of excess score to next floor',
@@ -2837,30 +2845,41 @@ body {
                 }
             }
 
-            calculateCrystalGain(finalScore, targetScore) {
-                if (finalScore <= targetScore) return 0;
-                
-                const overage = finalScore - targetScore;
-                const overageMultiplier = finalScore / targetScore;
-                
-                let crystalGain = Math.floor(overage / 1000);
-                
-                // Bonus multipliers for extreme overages
-                if (overageMultiplier >= 100) {
-                    crystalGain = Math.floor(crystalGain * 3); // +200% bonus
-                } else if (overageMultiplier >= 50) {
-                    crystalGain = Math.floor(crystalGain * 2); // +100% bonus
-                } else if (overageMultiplier >= 10) {
-                    crystalGain = Math.floor(crystalGain * 1.5); // +50% bonus
-                }
-                
-                // Apply crystal multiplier upgrade if owned
-                if (this.purchasedUpgrades['crystal_resonance']) {
-                    crystalGain = Math.floor(crystalGain * 2);
-                }
-                
-                return crystalGain;
-            }
+			calculateCrystalGain(finalScore, targetScore) {
+				if (finalScore <= targetScore) return 0;
+				
+				const overage = finalScore - targetScore;
+				const overageMultiplier = finalScore / targetScore;
+				
+				let crystalGain = Math.floor(overage / 1000);
+				
+				// Bonus multipliers for extreme overages
+				if (overageMultiplier >= 100) {
+					crystalGain = Math.floor(crystalGain * 3); // +200% bonus
+				} else if (overageMultiplier >= 50) {
+					crystalGain = Math.floor(crystalGain * 2); // +100% bonus
+				} else if (overageMultiplier >= 10) {
+					crystalGain = Math.floor(crystalGain * 1.5); // +50% bonus
+				}
+				
+				// Apply crystal multiplier upgrades
+				let multiplier = 1;
+				
+				// Apply crystal resonance upgrade if owned (doubles crystal gain)
+				if (this.purchasedUpgrades['crystal_resonance']) {
+					multiplier *= 2;
+				}
+				
+				// Apply arcane amplifier upgrade if owned (6x crystal gain - 500% increase + base 100%)
+				if (this.purchasedUpgrades['arcane_amplifier']) {
+					multiplier *= 6;
+				}
+				
+				// Apply the combined multiplier
+				crystalGain = Math.floor(crystalGain * multiplier);
+				
+				return crystalGain;
+			}
 
             awardCrystals(amount) {
                 if (amount <= 0) return;
