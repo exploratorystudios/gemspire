@@ -117,6 +117,23 @@ body {
 .gem.lightning { background: linear-gradient(135deg, #ffd43b, #fab005); color: #000; }
 .gem.void { background: linear-gradient(135deg, #9775fa, #7c3aed); color: #fff; }
 
+.consumable-btn:disabled,
+.booster-btn:disabled,
+.options-btn:disabled {
+    background: rgba(107, 114, 128, 0.5) !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.consumable-btn:disabled:hover,
+.booster-btn:disabled:hover,
+.options-btn:disabled:hover {
+    background: rgba(107, 114, 128, 0.5) !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
 .ui-panel {
     flex: 1;
     display: flex;
@@ -1918,6 +1935,7 @@ body {
 				this.currentCombo = 0;
 				this.isCurrentlyScoring = false;
 
+				this.interactionsDisabled = false;
 				this.originalTargetScore = null;
 
 				this.scorePopupQueue = [];
@@ -1975,7 +1993,77 @@ body {
 					this.multiplier = 3.0;
 				}
 			}
-			
+
+			disableAllInteractions() {
+				console.log('Disabling all interactions');
+				
+				// Disable consumable buttons
+				const consumableButtons = document.querySelectorAll('.consumable-btn');
+				consumableButtons.forEach(btn => {
+					btn.disabled = true;
+					btn.style.opacity = '0.5';
+					btn.style.cursor = 'not-allowed';
+					btn.style.pointerEvents = 'none';
+				});
+				
+				// Disable booster buttons
+				const boosterButtons = document.querySelectorAll('.booster-btn');
+				boosterButtons.forEach(btn => {
+					btn.disabled = true;
+					btn.style.opacity = '0.5';
+					btn.style.cursor = 'not-allowed';
+					btn.style.pointerEvents = 'none';
+				});
+				
+				// Disable options button
+				const optionsButton = document.querySelector('.options-btn');
+				if (optionsButton) {
+					optionsButton.disabled = true;
+					optionsButton.style.opacity = '0.5';
+					optionsButton.style.pointerEvents = 'none';
+				}
+				
+				// Store that interactions are disabled (for gem click handler to check)
+				this.interactionsDisabled = true;
+			}
+
+			enableAllInteractions() {
+				console.log('Enabling all interactions');
+				
+				// Clear the disabled flag first
+				this.interactionsDisabled = false;
+				
+				// Re-enable consumable buttons
+				const consumableButtons = document.querySelectorAll('.consumable-btn');
+				consumableButtons.forEach(btn => {
+					btn.disabled = false;
+					btn.style.opacity = '1';
+					btn.style.cursor = 'pointer';
+					btn.style.pointerEvents = 'auto';
+				});
+				
+				// Re-enable booster buttons
+				const boosterButtons = document.querySelectorAll('.booster-btn');
+				boosterButtons.forEach(btn => {
+					btn.disabled = false;
+					btn.style.opacity = '1';
+					btn.style.cursor = 'pointer';
+					btn.style.pointerEvents = 'auto';
+				});
+				
+				// Re-enable options button
+				const optionsButton = document.querySelector('.options-btn');
+				if (optionsButton) {
+					optionsButton.disabled = false;
+					optionsButton.style.opacity = '1';
+					optionsButton.style.pointerEvents = 'auto';
+				}
+				
+				// Force update displays now that interactions are enabled
+				this.updateConsumablesDisplay();
+				this.updateBoostersDisplay();
+			}
+
             // Crystal and Shop System
             loadCrystals() {
                 return parseInt(localStorage.getItem('gemspire_crystals') || '0');
@@ -2244,6 +2332,10 @@ body {
 					return;
 				}
 				
+				// Disable interactions during transmutation
+				this.animating = true;
+				this.disableAllInteractions();
+				
 				// Consume one use ONLY from active boosters
 				this.activeBoosters['gem_transmuter']--;
 				
@@ -2294,6 +2386,20 @@ body {
 				
 				// Play a sound effect
 				this.playSound('relic');
+				
+				// Wait for animation, then check for matches and re-enable
+				setTimeout(async () => {
+					// Process any matches that resulted from the transmutation
+					await this.processMatches();
+					
+					// Update UI and check game state
+					this.updateUI();
+					this.checkGameState();
+					
+					// Re-enable interactions
+					this.animating = false;
+					this.enableAllInteractions();
+				}, 400);
 			}
 			
             showCrystalGain(amount) {
@@ -2998,100 +3104,128 @@ body {
                 this.closePurchaseConfirmation();
             }
 
-            updateConsumablesDisplay() {
-                const panel = document.getElementById('consumablesPanel');
-                const buttonsContainer = document.getElementById('consumableButtons');
-                
-                if (!panel || !buttonsContainer) return;
-                
-                buttonsContainer.innerHTML = '';
-                
-                let hasConsumables = false;
-                for (const itemId in this.consumableInventory) {
-                    if (this.consumableInventory[itemId] > 0) {
-                        hasConsumables = true;
-                        break;
-                    }
-                }
-                
-                if (hasConsumables) {
-                    panel.style.display = 'block';
-                    
-                    for (const itemId in this.consumableInventory) {
-                        if (this.consumableInventory[itemId] > 0) {
-                            const item = this.shopItems.consumables.find(c => c.id === itemId);
-                            if (item) {
-                                const button = document.createElement('button');
-                                button.className = 'consumable-btn';
-                                button.textContent = item.name;
-                                button.dataset.itemId = itemId;
-                                button.onclick = () => this.useConsumable(itemId);
-                                
-                                const countSpan = document.createElement('span');
-                                countSpan.className = 'consumable-count';
-                                countSpan.textContent = this.consumableInventory[itemId];
-                                button.appendChild(countSpan);
-                                
-                                buttonsContainer.appendChild(button);
-                            }
-                        }
-                    }
-                } else {
-                    panel.style.display = 'none';
-                }
-            }
+			updateConsumablesDisplay() {
+				// Don't update during animations to prevent re-enabling buttons
+				if (this.interactionsDisabled || this.animating) {
+					return;
+				}
+				
+				const panel = document.getElementById('consumablesPanel');
+				const buttonsContainer = document.getElementById('consumableButtons');
+				
+				if (!panel || !buttonsContainer) return;
+				
+				buttonsContainer.innerHTML = '';
+				
+				let hasConsumables = false;
+				for (const itemId in this.consumableInventory) {
+					if (this.consumableInventory[itemId] > 0) {
+						hasConsumables = true;
+						break;
+					}
+				}
+				
+				if (hasConsumables) {
+					panel.style.display = 'block';
+					
+					for (const itemId in this.consumableInventory) {
+						if (this.consumableInventory[itemId] > 0) {
+							const item = this.shopItems.consumables.find(c => c.id === itemId);
+							if (item) {
+								const button = document.createElement('button');
+								button.className = 'consumable-btn';
+								button.textContent = item.name;
+								button.dataset.itemId = itemId;
+								button.onclick = () => this.useConsumable(itemId);
+								
+								// Apply disabled state if interactions are disabled
+								if (this.interactionsDisabled || this.animating) {
+									button.disabled = true;
+									button.style.opacity = '0.5';
+									button.style.cursor = 'not-allowed';
+									button.style.pointerEvents = 'none';
+								}
+								
+								const countSpan = document.createElement('span');
+								countSpan.className = 'consumable-count';
+								countSpan.textContent = this.consumableInventory[itemId];
+								button.appendChild(countSpan);
+								
+								buttonsContainer.appendChild(button);
+							}
+						}
+					}
+				} else {
+					panel.style.display = 'none';
+				}
+			}
 
-            useConsumable(itemId) {
-                if (!this.consumableInventory[itemId] || this.consumableInventory[itemId] <= 0) return;
-                
-                const item = this.shopItems.consumables.find(c => c.id === itemId);
-                if (!item) return;
-                
-                this.pendingConsumable = item;
-                
-                if (itemId === 'lightning_storm') {
-                    this.showGemSelectionModal();
-                } else if (itemId === 'void_collapse') {
-                    this.applyVoidCollapse();
-                } else if (itemId === 'gem_forge') {
-                    this.applyGemForge();
-                } else if (itemId === 'time_freeze') {
-                    this.applyTimeFreeze();
-                }
-            }
+			useConsumable(itemId) {
+				console.log('useConsumable called with:', itemId);
+				
+				if (!this.consumableInventory[itemId] || this.consumableInventory[itemId] <= 0) {
+					console.log('No consumable available');
+					return;
+				}
+				
+				const item = this.shopItems.consumables.find(c => c.id === itemId);
+				if (!item) {
+					console.log('Item not found');
+					return;
+				}
+				
+				if (itemId === 'lightning_storm') {
+					console.log('Showing lightning storm modal');
+					// Don't set pendingConsumable, just show the modal
+					this.showGemSelectionModal();
+				} else {
+					// For other consumables, set pendingConsumable as before
+					this.pendingConsumable = item;
+					
+					if (itemId === 'void_collapse') {
+						this.applyVoidCollapse();
+					} else if (itemId === 'gem_forge') {
+						this.applyGemForge();
+					} else if (itemId === 'time_freeze') {
+						this.applyTimeFreeze();
+					}
+				}
+			}
 
-            showGemSelectionModal() {
-                console.log('showGemSelectionModal called for lightning storm');
-                
-                // Store for lightning storm
-                window.lightningStormTarget = {game: this};
-                
-                const modal = document.getElementById('gemSelectionModal');
-                const title = modal.querySelector('.gem-selection-title');
-                const buttonsContainer = modal.querySelector('.gem-type-buttons');
-                
-                title.textContent = 'Choose a Gem Type to Strike';
-                buttonsContainer.innerHTML = '';
-                
-                this.gemTypes.forEach(type => {
-                    const button = document.createElement('button');
-                    button.className = `gem-type-btn ${type}`;
-                    button.textContent = this.gemSymbols[type];
-                    button.style.cursor = 'pointer';
-                    
-                    // Store data on button
-                    button.dataset.gemType = type;
-                    
-                    // Use simple onclick with global function
-                    button.setAttribute('onclick', `handleLightningStormClick('${type}')`);
-                    
-                    buttonsContainer.appendChild(button);
-                    console.log('Added lightning button for', type);
-                });
-                
-                modal.style.display = 'block';
-                console.log('Lightning storm modal shown');
-            }
+			showGemSelectionModal() {
+				console.log('showGemSelectionModal called for lightning storm');
+				
+				const modal = document.getElementById('gemSelectionModal');
+				const title = modal.querySelector('.gem-selection-title');
+				const buttonsContainer = modal.querySelector('.gem-type-buttons');
+				
+				title.textContent = 'Choose a Gem Type to Strike';
+				buttonsContainer.innerHTML = '';
+				
+				// Store the consumable info on the modal itself
+				modal.dataset.consumableId = 'lightning_storm';
+				
+				this.gemTypes.forEach(type => {
+					const button = document.createElement('button');
+					button.className = `gem-type-btn ${type}`;
+					button.textContent = this.gemSymbols[type];
+					button.style.cursor = 'pointer';
+					button.dataset.gemType = type;
+					
+					// Use direct method call without relying on pendingConsumable
+					button.onclick = () => {
+						console.log('Lightning storm button clicked for type:', type);
+						this.closeGemSelectionModal();
+						this.applyLightningStormDirect(type);
+					};
+					
+					buttonsContainer.appendChild(button);
+					console.log('Added lightning button for', type);
+				});
+				
+				modal.style.display = 'block';
+				console.log('Lightning storm modal shown');
+			}
 
             showGemTransmuterModal(row, col) {
                 const modal = document.getElementById('gemSelectionModal');
@@ -3113,156 +3247,261 @@ body {
                 modal.style.display = 'block';
             }
 
-            closeGemSelectionModal() {
-                document.getElementById('gemSelectionModal').style.display = 'none';
-            }
+			closeGemSelectionModal() {
+				const modal = document.getElementById('gemSelectionModal');
+				if (modal) {
+					modal.style.display = 'none';
+				}
+				
+				// Clear any pending consumable if modal is closed without selection
+				this.pendingConsumable = null;
+			}
 
-            async applyLightningStorm(gemType) {
-                // Don't call closeGemSelectionModal since we already closed it
-                
-                if (!this.pendingConsumable) return;
-                
-                this.consumableInventory[this.pendingConsumable.id]--;
-                this.saveConsumableInventory();
-                this.updateConsumablesDisplay();
-                
-                let totalStormScore = 0;
-                const struckGems = [];
-                
-                // Find all gems of the selected type and mark them for removal
-                for (let row = 0; row < 7; row++) {
-                    for (let col = 0; col < 7; col++) {
-                        const gem = this.board[row][col];
-                        if (gem && gem.type === gemType) {
-                            // Score the gem
-                            totalStormScore += gem.value * 2;
-                            
-                            struckGems.push({row, col});
-                            
-                            // Add visual strike effect
-                            const elem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-                            if (elem) {
-                                elem.classList.add('lightning-strike');
-                            }
-                        }
-                    }
-                }
-                
-                // Add storm score
-                const finalStormScore = Math.floor(totalStormScore * this.multiplier * this.baseMultiplier);
-                this.score += finalStormScore;
-                this.animateScoreIncrease(finalStormScore);
-                
-                // Wait for visual effect
-                await new Promise(resolve => setTimeout(resolve, 600));
-                
-                // Remove all struck lightning gems from the board
-                for (const {row, col} of struckGems) {
-                    this.board[row][col] = null;
-                    const elem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-                    if (elem) {
-                        elem.classList.remove('lightning-strike');
-                        elem.style.opacity = '0';
-                        elem.style.transform = 'scale(0)';
-                    }
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 200));
-                
-                await this.dropGems();
-                await this.fillEmptySpaces();
-            }
+			async applyLightningStormDirect(gemType) {
+				console.log('=== APPLY LIGHTNING STORM DIRECT START ===');
+				console.log('gemType:', gemType);
+				
+				// Check if we have lightning storm consumables
+				if (!this.consumableInventory['lightning_storm'] || this.consumableInventory['lightning_storm'] <= 0) {
+					console.error('No lightning storm consumables available!');
+					this.showComboIndicator('⚡ No Lightning Storms available!');
+					return;
+				}
+				
+				// Disable interactions during lightning storm
+				this.animating = true;
+				
+				console.log('Consuming lightning storm directly...');
+				
+				// Consume the lightning storm from inventory
+				this.consumableInventory['lightning_storm']--;
+				this.saveConsumableInventory();
+				this.updateConsumablesDisplay();
+				
+				let totalStormScore = 0;
+				const struckGems = [];
+				
+				console.log('Searching for gems of type:', gemType);
+				
+				// Find all gems of the selected type and mark them for removal
+				for (let row = 0; row < 7; row++) {
+					for (let col = 0; col < 7; col++) {
+						const gem = this.board[row][col];
+						if (gem && gem.type === gemType) {
+							console.log(`Found ${gemType} gem at ${row},${col} with value ${gem.value}`);
+							
+							// Score the gem
+							totalStormScore += gem.value * 2;
+							struckGems.push({row, col});
+							
+							// Add visual strike effect
+							const elem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+							if (elem) {
+								elem.classList.add('lightning-strike');
+							}
+						}
+					}
+				}
+				
+				console.log('Total gems struck:', struckGems.length);
+				console.log('Total storm score before multipliers:', totalStormScore);
+				
+				if (struckGems.length === 0) {
+					this.showComboIndicator(`⚡ No ${this.gemSymbols[gemType]} gems found!`);
+					this.animating = false; // Re-enable interactions
+					return;
+				}
+				
+				// Add storm score
+				const finalStormScore = Math.floor(totalStormScore * this.multiplier * this.baseMultiplier);
+				this.score += finalStormScore;
+				this.animateScoreIncrease(finalStormScore);
+				
+				this.showComboIndicator(`⚡ LIGHTNING STORM! +${finalStormScore} points!`);
+				this.playSound('lightning');
+				
+				console.log('Final storm score:', finalStormScore);
+				
+				// Wait for visual effect
+				await new Promise(resolve => setTimeout(resolve, 600));
+				
+				// Remove all struck gems from the board
+				for (const {row, col} of struckGems) {
+					this.board[row][col] = null;
+					const elem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+					if (elem) {
+						elem.classList.remove('lightning-strike');
+						elem.style.opacity = '0';
+						elem.style.transform = 'scale(0)';
+					}
+				}
+				
+				await new Promise(resolve => setTimeout(resolve, 200));
+				
+				// Drop gems and fill spaces
+				await this.dropGems();
+				await this.fillEmptySpaces();
+				
+				// Process any matches that resulted from the lightning storm
+				await this.processMatches();
+				
+				// Update UI and check game state
+				this.updateUI();
+				this.checkGameState();
+				
+				// Re-enable interactions
+				this.animating = false;
+				
+				console.log('=== LIGHTNING STORM COMPLETE ===');
+			}
 
-            async applyVoidCollapse() {
-                if (!this.pendingConsumable) return;
-                
-                this.consumableInventory[this.pendingConsumable.id]--;
-                this.saveConsumableInventory();
-                this.updateConsumablesDisplay();
-                
-                // Find the lowest value gem
-                let lowestValue = Infinity;
-                for (let row = 0; row < 7; row++) {
-                    for (let col = 0; col < 7; col++) {
-                        const gem = this.board[row][col];
-                        if (gem && gem.value < lowestValue) {
-                            lowestValue = gem.value;
-                        }
-                    }
-                }
-                
-                // Remove all gems with the lowest value
-                const collapsedGems = [];
-                for (let row = 0; row < 7; row++) {
-                    for (let col = 0; col < 7; col++) {
-                        const gem = this.board[row][col];
-                        if (gem && gem.value === lowestValue) {
-                            this.board[row][col] = null;
-                            collapsedGems.push({row, col});
-                            
-                            const elem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-                            if (elem) {
-                                elem.style.opacity = '0';
-                                elem.style.transform = 'scale(0)';
-                            }
-                        }
-                    }
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 200));
-                
-                await this.dropGems();
-                await this.fillEmptySpaces();
-            }
+			async applyVoidCollapse() {
+				if (!this.pendingConsumable) return;
+				
+				// Disable interactions
+				this.animating = true;
+				this.disableAllInteractions();
+				
+				this.consumableInventory[this.pendingConsumable.id]--;
+				this.saveConsumableInventory();
+				this.updateConsumablesDisplay();
+				
+				// Clear pending consumable
+				this.pendingConsumable = null;
+				
+				// Find the lowest value gem
+				let lowestValue = Infinity;
+				for (let row = 0; row < 7; row++) {
+					for (let col = 0; col < 7; col++) {
+						const gem = this.board[row][col];
+						if (gem && gem.value < lowestValue) {
+							lowestValue = gem.value;
+						}
+					}
+				}
+				
+				// Remove all gems with the lowest value
+				const collapsedGems = [];
+				for (let row = 0; row < 7; row++) {
+					for (let col = 0; col < 7; col++) {
+						const gem = this.board[row][col];
+						if (gem && gem.value === lowestValue) {
+							this.board[row][col] = null;
+							collapsedGems.push({row, col});
+							
+							const elem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+							if (elem) {
+								elem.style.opacity = '0';
+								elem.style.transform = 'scale(0)';
+							}
+						}
+					}
+				}
+				
+				this.showComboIndicator(`🕳️ VOID COLLAPSE! Removed ${collapsedGems.length} gems!`);
+				this.playSound('void');
+				
+				await new Promise(resolve => setTimeout(resolve, 400));
+				
+				await this.dropGems();
+				await this.fillEmptySpaces();
+				
+				// Process any matches that resulted from the collapse
+				await this.processMatches();
+				
+				// Update UI and check game state
+				this.updateUI();
+				this.checkGameState();
+				
+				// Re-enable interactions
+				this.animating = false;
+				this.enableAllInteractions();
+			}
 
-            async applyGemForge() {
-                if (!this.pendingConsumable) return;
-                
-                this.consumableInventory[this.pendingConsumable.id]--;
-                this.saveConsumableInventory();
-                this.updateConsumablesDisplay();
-                
-                const gemsToUpgrade = [];
-                for (let row = 0; row < 7; row++) {
-                    for (let col = 0; col < 7; col++) {
-                        const gem = this.board[row][col];
-                        if (gem) {
-                            gemsToUpgrade.push({row, col});
-                        }
-                    }
-                }
-                
-                // Select 5 random gems to upgrade
-                const selectedGems = [];
-                while (selectedGems.length < 5 && gemsToUpgrade.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * gemsToUpgrade.length);
-                    selectedGems.push(gemsToUpgrade.splice(randomIndex, 1)[0]);
-                }
-                
-                // Upgrade the selected gems
-                for (const {row, col} of selectedGems) {
-                    if (this.board[row][col]) {
-                        this.board[row][col].value = 65;
-                        
-                        const elem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-                        if (elem) {
-                            this.updateGemElement(elem, this.board[row][col]);
-                            elem.classList.add('special');
-                        }
-                    }
-                }
-            }
+			async applyGemForge() {
+				if (!this.pendingConsumable) return;
+				
+				// Disable interactions
+				this.animating = true;
+				this.disableAllInteractions();
+				
+				this.consumableInventory[this.pendingConsumable.id]--;
+				this.saveConsumableInventory();
+				this.updateConsumablesDisplay();
+				
+				// Clear pending consumable
+				this.pendingConsumable = null;
+				
+				const gemsToUpgrade = [];
+				for (let row = 0; row < 7; row++) {
+					for (let col = 0; col < 7; col++) {
+						const gem = this.board[row][col];
+						if (gem) {
+							gemsToUpgrade.push({row, col});
+						}
+					}
+				}
+				
+				// Select 5 random gems to upgrade
+				const selectedGems = [];
+				while (selectedGems.length < 5 && gemsToUpgrade.length > 0) {
+					const randomIndex = Math.floor(Math.random() * gemsToUpgrade.length);
+					selectedGems.push(gemsToUpgrade.splice(randomIndex, 1)[0]);
+				}
+				
+				// Upgrade the selected gems with visual effects
+				for (const {row, col} of selectedGems) {
+					if (this.board[row][col]) {
+						this.board[row][col].value = 65;
+						
+						const elem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+						if (elem) {
+							this.updateGemElement(elem, this.board[row][col]);
+							elem.classList.add('special');
+							
+							// Add upgrade animation
+							elem.style.transform = 'scale(1.3)';
+							elem.style.transition = 'transform 0.3s ease';
+							
+							setTimeout(() => {
+								elem.style.transform = 'scale(1)';
+							}, 300);
+						}
+					}
+				}
+				
+				this.showComboIndicator(`🔨 GEM FORGE! Upgraded ${selectedGems.length} gems!`);
+				this.playSound('relic');
+				
+				await new Promise(resolve => setTimeout(resolve, 500));
+				
+				// Check for any matches created by the upgrades
+				await this.processMatches();
+				
+				// Update UI and check game state
+				this.updateUI();
+				this.checkGameState();
+				
+				// Re-enable interactions
+				this.animating = false;
+				this.enableAllInteractions();
+			}
 
-            async applyTimeFreeze() {
-                if (!this.pendingConsumable) return;
-                
-                this.consumableInventory[this.pendingConsumable.id]--;
-                this.saveConsumableInventory();
-                this.updateConsumablesDisplay();
-                
-                this.moves += 3;
-                this.updateUI();
-            }
+			async applyTimeFreeze() {
+				if (!this.pendingConsumable) return;
+				
+				this.consumableInventory[this.pendingConsumable.id]--;
+				this.saveConsumableInventory();
+				this.updateConsumablesDisplay();
+				
+				// Clear pending consumable
+				this.pendingConsumable = null;
+				
+				this.moves += 1;
+				this.showComboIndicator('⏰ TIME FREEZE! +1 Move!');
+				this.playSound('relic');
+				this.updateUI();
+			}
 
             updateBoostersDisplay() {
                 // Active boosters
@@ -3307,6 +3546,11 @@ body {
             }
 
 			updateAvailableBoostersDisplay() {
+				// Don't update during animations to prevent re-enabling buttons
+				if (this.interactionsDisabled || this.animating) {
+					return;
+				}
+				
 				const panel = document.getElementById('availableBoostersPanel');
 				const buttonsContainer = document.getElementById('availableBoosterButtons');
 				
@@ -3347,6 +3591,14 @@ body {
 										<div class="booster-description">${item.desc}</div>
 									`;
 									button.onclick = () => this.activateBooster(boosterId);
+								}
+								
+								// Apply disabled state if interactions are disabled
+								if (this.interactionsDisabled || this.animating) {
+									button.disabled = true;
+									button.style.opacity = '0.5';
+									button.style.cursor = 'not-allowed';
+									button.style.pointerEvents = 'none';
 								}
 								
 								button.dataset.boosterId = boosterId;
@@ -3619,8 +3871,9 @@ body {
 				gameBoard.innerHTML = '';
 				this.board = [];
 				
-				// Disable gem switching during board creation
+				// Disable gem switching AND consumables during board creation
 				this.animating = true;
+				this.disableAllInteractions();
 				
 				this.generateValidBoard();
 				
@@ -3669,10 +3922,13 @@ body {
 					this.createWaveEffect();
 				}, totalPlacementTime + 200);
 
-				// Re-enable gem switching after wave completes (updated timing)
-				const waveCompletionTime = totalPlacementTime + 200 + (6 + 6) * 30 + 200 + (49 * 8) + 250; // Updated for faster animation
+				// Calculate total time for wave effect completion
+				const waveCompletionTime = totalPlacementTime + 200 + (6 + 6) * 33 + 220 + (49 * 9) + 275;
+				
+				// Re-enable ALL interactions after wave completes
 				setTimeout(() => {
 					this.animating = false;
+					this.enableAllInteractions();
 				}, waveCompletionTime);
 				
 				// Apply cosmetic themes after board creation
@@ -3815,36 +4071,44 @@ body {
                 return gem;
             }
 
-            addEventListeners() {
-                const gameBoard = document.getElementById('gameBoard');
-                gameBoard.addEventListener('click', (e) => {
-                    if (this.animating || this.moves <= 0) return;
-                    
-                    const gemElement = e.target.closest('.gem');
-                    if (!gemElement) return;
-                    
-                    const row = parseInt(gemElement.dataset.row);
-                    const col = parseInt(gemElement.dataset.col);
-                    
-                    // Check for gem transmuter booster FIRST
-                    if (this.activeBoosters['gem_transmuter'] && this.activeBoosters['gem_transmuter'] > 0) {
-                        this.showGemTransmuterModal(row, col);
-                        return;
-                    }
-                    
-                    if (this.selectedGem) {
-                        if (this.selectedGem.row === row && this.selectedGem.col === col) {
-                            this.clearSelection();
-                        } else if (this.isAdjacent(this.selectedGem, {row, col})) {
-                            this.swapGems(this.selectedGem, {row, col});
-                        } else {
-                            this.selectGem(row, col);
-                        }
-                    } else {
-                        this.selectGem(row, col);
-                    }
-                });
-            }
+			addEventListeners() {
+				const gameBoard = document.getElementById('gameBoard');
+				gameBoard.addEventListener('click', (e) => {
+					// Check if interactions are disabled OR if animating OR if no moves left
+					if (this.interactionsDisabled || this.animating || this.moves <= 0) {
+						console.log('Gem clicks disabled:', {
+							interactionsDisabled: this.interactionsDisabled,
+							animating: this.animating,
+							moves: this.moves
+						});
+						return;
+					}
+					
+					const gemElement = e.target.closest('.gem');
+					if (!gemElement) return;
+					
+					const row = parseInt(gemElement.dataset.row);
+					const col = parseInt(gemElement.dataset.col);
+					
+					// Check for gem transmuter booster FIRST
+					if (this.activeBoosters['gem_transmuter'] && this.activeBoosters['gem_transmuter'] > 0) {
+						this.showGemTransmuterModal(row, col);
+						return;
+					}
+					
+					if (this.selectedGem) {
+						if (this.selectedGem.row === row && this.selectedGem.col === col) {
+							this.clearSelection();
+						} else if (this.isAdjacent(this.selectedGem, {row, col})) {
+							this.swapGems(this.selectedGem, {row, col});
+						} else {
+							this.selectGem(row, col);
+						}
+					} else {
+						this.selectGem(row, col);
+					}
+				});
+			}
 
             selectGem(row, col) {
                 this.clearSelection();
@@ -4639,6 +4903,7 @@ body {
 				this.currentCombo = 0;
 				this.isCurrentlyScoring = false;
 				
+				this.interactionsDisabled = false;
 				this.originalTargetScore = null;
 				
 				// Reset all relic effects
@@ -4983,25 +5248,6 @@ body {
                 
                 // Apply the transmutation immediately
                 gameInstance.applyGemTransmutation(row, col, gemType);
-            } else {
-                console.error('No game instance found!');
-            }
-        }
-
-        function handleLightningStormClick(gemType) {
-            console.log('handleLightningStormClick called:', gemType);
-            
-            // Immediately close any other modals that might be open
-            document.getElementById('purchaseConfirmation').style.display = 'none';
-            document.getElementById('optionsScreen').style.display = 'none';
-            
-            const gameInstance = game || window.tempGameForMusic;
-            if (gameInstance) {
-                // Force close the modal first
-                document.getElementById('gemSelectionModal').style.display = 'none';
-                
-                // Apply the lightning storm immediately
-                gameInstance.applyLightningStorm(gemType);
             } else {
                 console.error('No game instance found!');
             }
