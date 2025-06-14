@@ -615,6 +615,46 @@ body {
     font-weight: 900;
 }
 
+@keyframes jesterGambit {
+0%   { filter: hue-rotate(0deg) scale(1); }
+50%  { filter: hue-rotate(180deg) scale(1.1); }
+100% { filter: hue-rotate(360deg) scale(1); }
+}
+.jester-effect {
+animation: jesterGambit 3s ease-in-out infinite;
+}
+@keyframes quantumMirror {
+0%   { transform: perspective(400px) rotateY(0deg); opacity: 0.8; }
+50%  { transform: perspective(400px) rotateY(180deg); opacity: 1; }
+100% { transform: perspective(400px) rotateY(360deg); opacity: 0.8; }
+}
+.quantum-mirror-effect {
+animation: quantumMirror 4s linear infinite;
+}
+@keyframes entropySurge {
+0%   { box-shadow: 0 0 5px #fff; }
+50%  { box-shadow: 0 0 25px #ff4080; }
+100% { box-shadow: 0 0 5px #fff; }
+}
+.entropy-engine-effect {
+animation: entropySurge 2s ease-in-out infinite;
+border-color: #ff4080;
+}
+
+/* Jester’s Gambit: wave spin and fall */
+@keyframes jesterFall {
+0%   { transform: rotateZ(0deg) translateY(0);    opacity: 1; }
+50%  { transform: rotateZ(180deg) translateY(50vh); opacity: 0.7; }
+100% { transform: rotateZ(360deg) translateY(100vh); opacity: 0; }
+}
+.jester-fall {
+animation: jesterFall 0.8s ease-in-out forwards;
+}
+
+.shuffle-move {
+transition: transform 0.6s ease-out;
+}
+
 @keyframes selectedPulse {
     0%, 100% { 
         box-shadow: 
@@ -1913,6 +1953,7 @@ body {
     </div>
 
     <script>
+		let _nextGemId = 1;
         class Gemspire {
 			constructor() {
 				this.board = [];
@@ -1937,7 +1978,8 @@ body {
 				this.matchCounter = 0;
 				this.currentCombo = 0;
 				this.isCurrentlyScoring = false;
-
+				this._shuffleAnims = new Map();
+				this._isShuffling = false;
 				this.interactionsDisabled = false;
 				this.originalTargetScore = null;
 
@@ -1962,7 +2004,14 @@ body {
 				this.cascadeMaster = false;
 				this.voidHunger = false;
 				this.stormSurge = false;
-				
+
+				this.jesterGambit = false;
+				this.quantumMirror = false;
+				this.entropyEngine = false;
+				this.matchCountSinceJester = 0;
+				this.cascadeCountTotal = 0;
+				this.lastMatchPattern = null;
+	
 				// Crystal system - LOAD THESE FIRST
 				this.crystals = this.loadCrystals();
 				this.purchasedUpgrades = this.loadPurchasedUpgrades();
@@ -1995,6 +2044,181 @@ body {
 				if (this.purchasedUpgrades['reality_breaker']) {
 					this.multiplier = 3.0;
 				}
+			}
+
+			async shuffleBoard() {
+			  // make absolutely sure everything is back in the grid
+			  document.querySelectorAll('.gem').forEach(el => {
+				el.style.transform = '';
+				el.style.transition = '';
+			  });
+			  this._shuffleAnims.forEach((anims, el) => {
+				anims.forEach(a => a.cancel());
+			  });
+			  this._shuffleAnims.clear();
+			  
+			  if (this._isShuffling) return;
+			  this._isShuffling = true;
+
+			  // 0) Build the ID→position map from the model:
+			  const idToPos = new Map();
+			  this.board.forEach((rowArr, r) =>
+				rowArr.forEach((gem, c) => idToPos.set(gem.id, { oldRow: r, oldCol: c }))
+			  );
+
+			  // 1) Grab all .gem elems & clear any lingering transforms
+			  const elems = Array.from(document.querySelectorAll('.gem'));
+			  elems.forEach(el => {
+				el.style.transform = '';
+				el.style.transition = '';
+				el.getBoundingClientRect();  // force reflow
+			  });
+
+			  // 2) Map IDs → elements & cancel old animations
+			  const idToEl = new Map();
+			  elems.forEach(el => {
+				idToEl.set(Number(el.dataset.gemId), el);
+				const prev = this._shuffleAnims.get(el);
+				if (prev) prev.forEach(a => a.cancel());
+			  });
+			  this._shuffleAnims.clear();
+
+			  // 3) Flatten & shuffle the model
+			  const flatArr = this.board.flat();
+			  for (let i = flatArr.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[flatArr[i], flatArr[j]] = [flatArr[j], flatArr[i]];
+			  }
+			  // Build the new model matrix:
+			  const newBoard = Array.from({length: 7}, () => Array(7));
+			  flatArr.forEach((gem, idx) => {
+				const r = Math.floor(idx / 7), c = idx % 7;
+				newBoard[r][c] = gem;
+			  });
+			  // 4) Rebuild newBoard …
+			  for (let i = flatArr.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[flatArr[i], flatArr[j]] = [flatArr[j], flatArr[i]];
+			  }
+
+			  // 5) Animate each gem out & back in, *using idToPos for oldRow/oldCol*:
+			  const tileSize = 54
+			  const allSettles = flatArr.map((gem, newIdx) => {
+				const el = idToEl.get(gem.id);
+				if (!el) return Promise.resolve();
+
+				// **grab the true old coords from the model map:**
+				const { oldRow, oldCol } = idToPos.get(gem.id);
+				const newRow = Math.floor(newIdx / 7), newCol = newIdx % 7;
+
+				// … rest of your fling/juggle animation exactly as is …
+				const tossX = (Math.random()*2 -1) * tileSize * 2;
+				const tossY = (Math.random()*2 -1) * tileSize * 2;
+				const tossZ = 100 + Math.random()*200;
+				const rotY  = (Math.random()*720 -360) + 'deg';
+
+				const p1 = el.animate(
+				  [ { transform: 'none' },
+					{ transform: `
+						perspective(800px)
+						translate3d(${tossX}px, ${tossY}px, ${-tossZ}px)
+						rotateY(${rotY})
+						scale(1.2)
+					  ` }
+				  ],
+				  { duration:400, easing:'ease-out', fill:'forwards' }
+				);
+				this._shuffleAnims.set(el, [p1]);
+
+				return p1.finished.then(() => {
+				  const finalX = (newCol - oldCol) * tileSize;
+				  const finalY = (newRow - oldRow) * tileSize;
+				  const p2 = el.animate(
+					[ { transform: p1.effect.getComputedTiming().progress === 1
+							  ? p1.effect.getKeyframes()[1].transform
+							  : p1.effect.getKeyframes()[0].transform
+					  },
+					  { transform: `
+						  translate3d(${finalX}px, ${finalY}px, 0)
+						  scale(1)
+						` }
+					],
+					{ duration:600, easing:'ease-in', fill:'forwards' }
+				  );
+				  this._shuffleAnims.get(el).push(p2);
+				  return p2.finished.then(() => {
+					el.style.gridRowStart    = newRow + 1;
+					el.style.gridColumnStart = newCol + 1;
+					// keep the DOM dataset in sync, too:
+					el.dataset.row = newRow;
+					el.dataset.col = newCol;
+					el.getBoundingClientRect();
+					requestAnimationFrame(() => el.style.transform = '');
+				  });
+				});
+			  });
+
+			  await Promise.allSettled(allSettles);
+			  this.board = newBoard;
+			  this.updateUI();
+			   
+   			  // CANCEL any lingering animations & clear transforms
+			  this._shuffleAnims.forEach((anims, el) => {
+			    anims.forEach(a => a.cancel());
+			    el.style.transform  = '';
+			    el.style.transition = '';
+			  });
+
+			for (let row = 0; row < 7; row++) {
+			  for (let col = 0; col < 7; col++) {
+				const gem = this.board[row][col];
+				const el  = idToEl.get(String(gem.id));
+				if (!el) continue;
+				// make sure our dataset is correct
+				el.dataset.row = row;
+				el.dataset.col = col;
+				// snap the CSS Grid into the right spot
+				el.style.gridRowStart    = row + 1;
+				el.style.gridColumnStart = col + 1;
+				// clear any lingering transforms/transitions
+				el.style.transform  = '';
+				el.style.transition = '';
+			  }
+			}
+
+			for (let row = 0; row < 7; row++) {
+			  for (let col = 0; col < 7; col++) {
+				const gem = this.board[row][col];
+				const el  = idToEl.get(gem.id);   // <-- no String(…) wrapper
+				if (!el) continue;
+				el.dataset.row = row;
+				el.dataset.col = col;
+				el.style.gridRowStart    = row + 1;
+				el.style.gridColumnStart = col + 1;
+				el.style.transform  = '';
+				el.style.transition = '';
+			  }
+			}
+			this._shuffleAnims.clear();
+			this._isShuffling = false;
+			}
+			
+			animateShuffle() {
+				document.querySelectorAll('.gem').forEach(el => {
+					const dx = Math.random() * 400 - 200;
+					const dy = Math.random() * 400 - 200;
+					const rot = Math.random() * 720 - 360;
+					el.style.setProperty('--dx', dx + 'px');
+					el.style.setProperty('--dy', dy + 'px');
+					el.style.setProperty('--rot', rot + 'deg');
+					el.classList.add('shuffle-fly');
+					el.addEventListener('animationend', () => {
+						el.classList.remove('shuffle-fly');
+						el.style.removeProperty('--dx');
+						el.style.removeProperty('--dy');
+						el.style.removeProperty('--rot');
+					}, { once: true });
+				});
 			}
 
 			disableAllInteractions() {
@@ -2404,7 +2628,7 @@ body {
 					this.enableAllInteractions();
 				}, 400);
 			}
-			
+
             showCrystalGain(amount) {
                 const crystalDisplay = document.getElementById('crystalAmount');
                 if (!crystalDisplay) return;
@@ -2992,7 +3216,30 @@ body {
                     { name: '🕳️ Void Hunger', desc: 'Void matches consume and score from surrounding gems', type: 'void_hunger', effect: () => { this.voidHunger = true; } },
                     { name: '⚡ Storm Surge', desc: 'Lightning matches strike all Lightning gems on board, scoring them and increasing their value by +5', type: 'storm_surge', effect: () => { this.stormSurge = true; } }
                 ];
-                
+
+				const gameChangingRelics = [
+					{
+						name: '🎭 Jester\'s Gambit',
+						desc: 'Every 4 matches cascades all rows involved in those matches',
+						type: 'jester_gambit',
+						effect: () => { this.jesterGambit = true; }
+					},
+					{
+						name: '🔮 Quantum Mirror',
+						desc: 'Reflects the last match, duplicating its score & pattern',
+						type: 'quantum_mirror',
+						effect: () => { this.quantumMirror = true; }
+					},
+					{
+						name: '⚙️ Entropy Engine',
+						desc: 'Randomly shuffles board every 5 cascades',
+						type: 'entropy_engine',
+						effect: () => { this.entropyEngine = true; }
+					}
+				];
+				// merge into existing array
+				availableRelics.push(...gameChangingRelics);
+	
                 const newRelics = availableRelics.filter(relic => 
                     !this.relics.some(owned => owned.type === relic.type)
                 );
@@ -3345,7 +3592,7 @@ body {
 				console.log('Final storm score:', finalStormScore);
 				
 				// Wait for visual effect
-				await new Promise(resolve => setTimeout(resolve, 600));
+				await new Promise(resolve => setTimeout(resolve, 300));
 				
 				// Remove all struck gems from the board
 				for (const {row, col} of struckGems) {
@@ -3423,7 +3670,7 @@ body {
 				this.showComboIndicator(`🕳️ VOID COLLAPSE! Removed ${collapsedGems.length} gems!`);
 				this.playSound('void');
 				
-				await new Promise(resolve => setTimeout(resolve, 400));
+				await new Promise(resolve => setTimeout(resolve, 300));
 				
 				await this.dropGems();
 				await this.fillEmptySpaces();
@@ -3495,7 +3742,7 @@ body {
 				this.showComboIndicator(`🔨 GEM FORGE! Upgraded ${selectedGems.length} gems!`);
 				this.playSound('relic');
 				
-				await new Promise(resolve => setTimeout(resolve, 500));
+				await new Promise(resolve => setTimeout(resolve, 300));
 				
 				// Check for any matches created by the upgrades
 				await this.processMatches();
@@ -3738,6 +3985,10 @@ body {
             initializeGame() {
                 this.applyPermanentUpgrades();
                 this.createBoard();
+				document.querySelectorAll('.gem').forEach(el => {
+				  el.style.gridRowStart    = +el.dataset.row + 1;
+				  el.style.gridColumnStart = +el.dataset.col + 1;
+				});
                 this.updateUI();
                 this.addEventListeners();
                 this.initializeScoreDisplay();
@@ -3911,7 +4162,7 @@ body {
 						gemElement.textContent = gem.symbol;
 						gemElement.dataset.row = row;
 						gemElement.dataset.col = col;
-						
+						gemElement.dataset.gemId = gem.id;  
 						const valueDisplay = document.createElement('div');
 						valueDisplay.className = 'gem-value-display';
 						valueDisplay.textContent = gem.value;
@@ -4090,7 +4341,14 @@ body {
                     strikeCount: 0
                 };
                 
-                return gem;
+				return {
+					id: _nextGemId++,           // <-- unique
+					type,
+					symbol: this.gemSymbols[type],
+					value: baseValue,
+					isThunderbolt: false,
+					strikeCount: 0
+				};
             }
 
 			addEventListeners() {
@@ -4276,6 +4534,7 @@ body {
                     valueDisplay.className = 'gem-value-display';
                     element.appendChild(valueDisplay);
                 }
+				element.dataset.gemId = gem.id;
                 valueDisplay.textContent = gem.value;
             }
 
@@ -4327,6 +4586,7 @@ body {
 				this.resetBoosterCooldowns();
 				
 				this.showRelicSelection();
+				this.floorEntropyCascades = 0;
 			}
 			
 			async applyTimeFreeze() {
@@ -4351,23 +4611,33 @@ body {
                 this.actuallyShowRelicSelection();
             }
 
-            selectRelic(relic) {
-                // Play relic sound
-                this.playSound('relic');
-                
-                if (relic.type !== 'continue') {
-                    this.relics.push(relic);
-                }
-                relic.effect();
-                
-                this.moves = 4 + (this.bonusMoves || 0);
-                
-                document.getElementById('relicSelectionScreen').style.display = 'none';
-                this.createBoard();
-                this.updateUI();
-                this.updateRelicsDisplay();
-                this.initializeScoreDisplay();
-            }
+			selectRelic(relic) {
+			   this.playSound('relic');
+			   if (relic.type !== 'continue') {
+				    this.relics.push(relic);
+				    relic.effect();
+				    const el = document.getElementById('relicsList').lastElementChild;
+				    if (el) {
+		 			    const map = {
+		 				    jester_gambit:    'jester-effect',
+		 				    quantum_mirror:   'quantum-mirror-effect',
+		 		 		    entropy_engine:   'entropy-engine-effect'
+		 			    };
+		 			    el.classList.add(map[relic.type]);
+		 		    }
+			    }
+			    this.moves = 4 + (this.bonusMoves || 0);
+			    document.getElementById('relicSelectionScreen').style.display = 'none';
+			    this.createBoard();
+				document.querySelectorAll('.gem').forEach(el => {
+				  el.style.gridRowStart    = +el.dataset.row + 1;
+				  el.style.gridColumnStart = +el.dataset.col + 1;
+				});
+
+			    this.updateUI();
+			    this.updateRelicsDisplay();
+			    this.initializeScoreDisplay();
+			}
 
             updateRelicsDisplay() {
                 const relicsList = document.getElementById('relicsList');
@@ -4432,6 +4702,7 @@ body {
             async processMatches() {
                 let totalMatches = 0;
                 let comboMultiplier = 1;
+				this.isCurrentlyScoring = false;
                 this.cascadeCount = 0;
                 this.currentCombo = 0;
                 
@@ -4464,63 +4735,9 @@ body {
                     }
                     
                     // Process explosive matches
-                    if (this.explosiveMatches && matches.length >= 4) {
-                        const matchesByType = {};
-                        for (const match of matches) {
-                            const gem = this.board[match.row][match.col];
-                            if (gem) {
-                                if (!matchesByType[gem.type]) {
-                                    matchesByType[gem.type] = [];
-                                }
-                                matchesByType[gem.type].push(match);
-                            }
-                        }
-                        
-                        let explosiveType = null;
-                        let explosiveMatches = [];
-                        for (const [type, typeMatches] of Object.entries(matchesByType)) {
-                            if (typeMatches.length >= 4) {
-                                explosiveType = type;
-                                explosiveMatches = typeMatches;
-                                break;
-                            }
-                        }
-                        
-                        if (explosiveType && explosiveMatches.length >= 4) {
-                            this.showComboIndicator('💥 EXPLOSIVE MATCH!');
-                            this.playSound('explode');
-
-                            let explosionScore = 0;
-                            const surroundingGems = new Set();
-                            const allExplodingGems = [...explosiveMatches];
-
-                            for (const match of explosiveMatches) {
-                                const directions = [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]];
-                                for (const [dr, dc] of directions) {
-                                    const explodeRow = match.row + dr;
-                                    const explodeCol = match.col + dc;
-                                    if (explodeRow >= 0 && explodeRow < 7 && explodeCol >= 0 && explodeCol < 7 && 
-                                        this.board[explodeRow][explodeCol] && 
-                                        !matches.some(m => m.row === explodeRow && m.col === explodeCol)) {
-                            
-                                        const gemKey = `${explodeRow}-${explodeCol}`;
-                                        if (!surroundingGems.has(gemKey)) {
-                                            surroundingGems.add(gemKey);
-                                            explosionScore += this.board[explodeRow][explodeCol].value * 0.5;
-                                            allExplodingGems.push({row: explodeRow, col: explodeCol});
-                                            this.board[explodeRow][explodeCol] = null;
-                                        }
-                                    }
-                                }
-                            }
-
-                            await this.explodeMatchedGems(allExplodingGems);
-
-                            const totalExplosionScore = Math.floor(explosionScore * this.multiplier * this.baseMultiplier);
-                            this.score += totalExplosionScore;
-                            this.animateScoreIncrease(totalExplosionScore);
-                        }
-                    }
+					if (this.explosiveMatches && matches.length >= 4) {
+						await this.handleExplosiveMatches(matches);
+					}
                     
                     for (const match of matches) {
                         const elem = document.querySelector(`[data-row="${match.row}"][data-col="${match.col}"]`);
@@ -4543,7 +4760,6 @@ body {
                         }
                     }
                     
-                    await new Promise(resolve => setTimeout(resolve, 300));
                     
                     let matchScore = 0;
                     for (const match of matches) {
@@ -4616,6 +4832,7 @@ body {
                             }
                             
                             if (!wasExplosive) {
+								elem.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                                 elem.style.opacity = '0';
                                 elem.style.transform = 'scale(0)';
                             }
@@ -4626,8 +4843,58 @@ body {
                     
                     await this.dropGems();
                     await this.fillEmptySpaces();
-                    
-                    comboMultiplier += 1.0;
+
+					const rows = [...new Set(matches.map(m => m.row))];
+	
+					// 4) Jester's Gambit (🎭 every 4 matches)
+					if (this.jesterGambit) {
+					  this.matchRoundsSinceJester = (this.matchRoundsSinceJester || 0) + 1;
+					  // fire on every *even* round:
+					  if (this.matchRoundsSinceJester % 4 === 0) {
+						await this.animateJesterGambit(rows);
+					  }
+					}
+
+					// 5) Quantum Mirror (🔮)
+					if (this.quantumMirror && this.lastMatchPattern) {
+						let mirrorScore = this.lastMatchPattern.reduce(
+							(sum, m) => sum + (this.board[m.row]?.[m.col]?.value || 0),
+							0
+						);
+						this.score += mirrorScore;
+						this.animateScoreIncrease(mirrorScore);
+						await new Promise(res => setTimeout(res, 10));
+					}
+
+					// 6) Entropy Engine (⚙️ every 5 cascades)
+					if (this.entropyEngine) {
+					  this.floorEntropyCount = (this.floorEntropyCount || 0) + 1;
+
+					  if (this.floorEntropyCount % 5 === 0) {
+						// 1) block until any in-flight shuffleBoard() is done
+						while (this._isShuffling) {
+						  await new Promise(r => setTimeout(r, 50));
+						}
+						// 2) now do the full fling-out + settle
+						await this.shuffleBoard();
+
+						// 3) refill as usual
+						await this.dropGems();
+						await this.fillEmptySpaces();
+					  }
+					}
+
+
+					// store pattern for next iteration
+					this.lastMatchPattern = matches.slice();
+
+					// Wait out removal animations, then refill
+					await new Promise(res => setTimeout(res, 20));
+					await this.dropGems();
+					await this.fillEmptySpaces();
+
+					comboMultiplier += 1;
+
                 }
                 
                 this.hideComboDisplay();
@@ -4813,7 +5080,7 @@ body {
                         this.animateScoreIncrease(voidScore);
                     }
                     
-                    const animationDelay = Math.max(200, 350 - (voidMatches.length * 25));
+                    const animationDelay = Math.max(100, 150 - (voidMatches.length * 25));
                     await new Promise(resolve => setTimeout(resolve, animationDelay));
                 }
             }
@@ -4851,7 +5118,7 @@ body {
                     this.score += finalStormScore;
                     this.animateScoreIncrease(finalStormScore);
                     
-                    await new Promise(resolve => setTimeout(resolve, 600));
+                    await new Promise(resolve => setTimeout(resolve, 300));
                     
                     for (const {row, col} of struckGems) {
                         this.board[row][col] = null;
@@ -4866,6 +5133,72 @@ body {
                     await new Promise(resolve => setTimeout(resolve, 200));
                 }
             }
+
+			async handleExplosiveMatches(matches) {
+			  const matchesByType = {};
+			  for (const match of matches) {
+				const gem = this.board[match.row][match.col];
+				if (!gem) continue;
+				matchesByType[gem.type] = matchesByType[gem.type] || [];
+				matchesByType[gem.type].push(match);
+			  }
+
+			  // find any type with ≥4 matches
+			  let explosiveMatches = [];
+			  for (const typeMatches of Object.values(matchesByType)) {
+				if (typeMatches.length >= 4) {
+				  explosiveMatches = typeMatches;
+				  break;
+				}
+			  }
+
+			  if (explosiveMatches.length >= 4) {
+				this.showComboIndicator('💥 EXPLOSIVE MATCH!');
+				this.playSound('explode');
+
+				let explosionScore = 0;
+				const surroundingGems = new Set();
+				// start with the core matched gems...
+				const allExplodingGems = [...explosiveMatches];
+
+				for (const match of explosiveMatches) {
+				  const directions = [
+					[-1,-1],[-1,0],[-1,1],
+					[ 0,-1],       [ 0,1],
+					[ 1,-1],[ 1,0],[ 1,1],
+				  ];
+				  for (const [dr, dc] of directions) {
+					const r = match.row + dr;
+					const c = match.col + dc;
+					if (
+					  r >= 0 && r < 7 &&
+					  c >= 0 && c < 7 &&
+					  this.board[r][c] &&
+					  !matches.some(m => m.row === r && m.col === c)
+					) {
+					  const gemKey = `${r}-${c}`;
+					  if (!surroundingGems.has(gemKey)) {
+						surroundingGems.add(gemKey);
+						explosionScore += this.board[r][c].value * 0.5;
+						allExplodingGems.push({ row: r, col: c });
+						// clear out so they don’t get picked up later
+						this.board[r][c] = null;
+					  }
+					}
+				  }
+				}
+
+				// animate *all* of them with your shared helper
+				await this.explodeMatchedGems(allExplodingGems);
+
+				// finally, award points
+				const totalExplosionScore = Math.floor(
+				  explosionScore * this.multiplier * this.baseMultiplier
+				);
+				this.score += totalExplosionScore;
+				this.animateScoreIncrease(totalExplosionScore);
+			  }
+			}
 
             async explodeMatchedGems(matches) {
                 for (const match of matches) {
@@ -4897,7 +5230,58 @@ body {
                     }
                 }
             }
-            
+
+			async animateJesterGambit(rows) {
+			  // 1) Gather coordinates
+			  const toExplode = [];
+			  rows.forEach(row => {
+				for (let col = 0; col < 7; col++) {
+				  toExplode.push({ row, col });
+				}
+			  });
+
+			  // 2) Compute score upfront
+			  let jesterScore = toExplode.reduce((sum, {row, col}) => {
+				const gem = this.board[row][col];
+				return sum + (gem ? gem.value : 0);
+			  }, 0);
+
+			  this.showComboIndicator('🎭 JESTER’S GAMBIT!');
+			  this.playSound('explode');
+
+			  // 3) Animate the fall, but _don't_ touch the model yet
+			  await Promise.all(toExplode.map(({row, col}, idx) => {
+				return new Promise(resolve => {
+				  const el = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+				  if (!el) return resolve();  
+
+				  // stagger by column so it waves
+				  setTimeout(() => {
+					el.classList.add('jester-fall');
+					el.addEventListener('animationend', () => {
+					  // hide it now—but still keep its board entry for moment
+					  el.style.opacity = '0';
+					  resolve();
+					}, { once: true });
+				  }, col * 80);
+				});
+			  }));
+
+			  // 4) Now actually clear out the model
+			  toExplode.forEach(({row, col}) => {
+				this.board[row][col] = null;
+			  });
+
+			  // 5) Award score
+			  this.score += jesterScore;
+			  this.animateScoreIncrease(jesterScore);
+
+			  // 6) Let your normal cascade logic take over
+			  await this.dropGems();
+			  await this.fillEmptySpaces();
+			  await this.processMatches();
+			}
+			
             restartGame() {
 				console.log('restartGame called - preserving audio state');
 				
@@ -4906,7 +5290,15 @@ body {
 				const wasAudioPermissionGiven = this.audioPermissionGiven;
 				const currentMusicVolume = this.musicVolume;
 				const currentSfxVolume = this.sfxVolume;
-				
+
+				this.jesterGambit = false;
+				this.quantumMirror = false;
+				this.entropyEngine = false;
+				this.matchCountSinceJester = 0;
+				this.cascadeCountTotal = 0;
+				// clear equipped relics and refresh UI
+				this.relics = [];
+				this.updateRelicsDisplay();
 				// Stop current music but don't destroy audio system
 				this.stopBackgroundMusic();
 				
@@ -4977,12 +5369,23 @@ body {
 				
 				// Reset and create new board
 				this.createBoard();
+				document.querySelectorAll('.gem').forEach(el => {
+				  el.style.gridRowStart    = +el.dataset.row + 1;
+				  el.style.gridColumnStart = +el.dataset.col + 1;
+				});
+
 				this.updateUI();
 				this.updateRelicsDisplay();
 				this.initializeScoreDisplay();
 				this.updateConsumablesDisplay();
 				this.updateBoostersDisplay();
-				
+
+				// restart music if enabled
+				if (this.audioEnabled) {
+				  this.playBackgroundMusic('bg1');
+				  this.showIngameAudioToggle();
+				}
+
 				console.log('Game restarted successfully with audio state preserved');
 			}
 		}
