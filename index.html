@@ -4683,18 +4683,33 @@ transition: transform 0.6s ease-out;
 				this.playSound('lose');
 				
 				const gameOverScreen = document.getElementById('gameOverScreen');
-				const floorResult = document.getElementById('floorResult');
+				const floorResult     = document.getElementById('floorResult');
+				const restartBtn      = gameOverScreen.querySelector('button[onclick="restartGame()"]');
+				const menuBtn         = gameOverScreen.querySelector('button[onclick="returnToStart()"]');
+
+				// Disable both buttons immediately
+				restartBtn.disabled = true;
+				menuBtn.disabled    = true;
+				restartBtn.style.opacity = '0.5';
+				menuBtn.style.opacity    = '0.5';
 				
 				gameOverScreen.querySelector('h2').textContent = 'Game Over!';
-				floorResult.textContent = `Floor ${this.floor} Failed. You needed ${this.targetScore} points but only scored ${this.score}.`;
+				floorResult.textContent = 
+				  `Floor ${this.floor} Failed. You needed ${this.targetScore} points but only scored ${this.score}.`;
 				gameOverScreen.style.display = 'block';
 				
-				// Start game over music after lose sound finishes
+				// wait for your lose‐to‐gameover transition to finish
 				setTimeout(() => {
-					if (this.audioEnabled && this.sounds && this.sounds.gameover) {
-						this.sounds.gameover.volume = this.musicVolume / 100;
-						this.playBackgroundMusic('gameover');
-					}
+				  if (this.audioEnabled && this.sounds && this.sounds.gameover) {
+					this.sounds.gameover.volume = this.musicVolume / 100;
+					this.playBackgroundMusic('gameover');
+				  }
+
+				  // now that cleanup & music have started, re‐enable buttons
+				  restartBtn.disabled = false;
+				  menuBtn.disabled    = false;
+				  restartBtn.style.opacity = '';
+				  menuBtn.style.opacity    = '';
 				}, 1500);
 			}
 
