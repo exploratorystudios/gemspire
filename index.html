@@ -2667,7 +2667,7 @@ transition: transform 0.6s ease-out;
 						{
 							id: 'move_master',
 							name: '🎯 Move Master',
-							desc: 'Start each run with +1 extra move per floor',
+							desc: 'Start each run with +1 extra move',
 							price: 25000,
 							rarity: 'rare',
 							type: 'Permanent Upgrade'
@@ -3307,7 +3307,7 @@ transition: transform 0.6s ease-out;
 					this.gemValueBoost += 0.1;
 				}
 				if (this.purchasedUpgrades['move_master']) {
-					this.bonusMoves = (this.bonusMoves || 0) + 1;
+					this.bonusMoves = 1;
 				}
 				if (this.purchasedUpgrades['relic_abundance']) {
 					this.grantStartingRelics();
@@ -5288,8 +5288,14 @@ transition: transform 0.6s ease-out;
 			  });
 
 			  // 5) Award score
-			  this.score += jesterScore;
-			  this.animateScoreIncrease(jesterScore);
+			  const finalJesterScore = Math.floor(
+				jesterScore
+				* this.multiplier
+				* this.baseMultiplier
+				* (this.currentCombo || 1)
+			  );
+			  this.score += finalJesterScore;
+			  this.animateScoreIncrease(finalJesterScore);
 
 			  // 6) Let your normal cascade logic take over
 			  await this.dropGems();
