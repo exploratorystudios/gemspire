@@ -1776,373 +1776,410 @@ transition: transform 0.6s ease-out;
 
 /* Base mobile styles */
 @media screen and (max-width: 768px) {
-    body {
-        overflow-x: hidden;
-        overflow-y: auto; /* Allow vertical scrolling */
-        height: auto;
-        min-height: 100vh;
-        margin: 0;
-        padding: 0;
-    }
-    
-    /* Main game container stacked vertically */
-    .game-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 5px;
-        gap: 5px;
-        min-height: 100vh;
-        overflow: visible;
-    }
-    
-    /* Ensure ordering: Active relics -> Stats -> Title+Board */
-    .active-relics-container {
-        order: 1;
-        width: calc(100vw - 20px);
-        max-width: 350px;
-        margin: 5px auto;
-        padding: 5px;
-    }
-    .stats-panel {
-        order: 2;
-        padding: 10px;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        margin: 5px 0;
-    }
-    .game-container > div:first-child {
-        order: 3;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-    }
-    
-    /* Title */
-    .title {
-        font-size: 18px;
-        margin: 5px 0;
-        line-height: 1;
-    }
-    
-    /* Game board grid */
-    .game-board {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        grid-template-rows: repeat(7, 1fr);
-        width: calc(100vw - 20px);
-        height: calc(100vw - 20px);
-        max-width: 350px;
-        max-height: 350px;
-        padding: 10px;
-        gap: 2px;
-        margin: 0;
-    }
-    
-    .gem {
-        width: 100%;
-        height: 100%;
-        font-size: min(3.5vw, 24px);
-        border-radius: 6px;
-        border-width: 2px;
-        max-width: none;
-        max-height: none;
-    }
-    
-    .gem-value-display {
-        font-size: min(1.5vw, 10px);
-        bottom: 2px;
-        right: 2px;
-    }
-    
-    /* Floor info, moves, progress, score, crystals, combo, stat items */
-    .floor-info, .moves-left, .progress-bar, .score-display, .crystal-display, .combo-display, .stat-item {
-        width: 100%;
-        text-align: center;
-        margin: 0;
-    }
-    .floor-info, .moves-left {
-        font-size: 14px;
-    }
-    .progress-bar {
-        height: 14px;
-        margin: 3px 0;
-    }
-    .score-display {
-        font-size: 22px;
-    }
-    .crystal-display {
-        font-size: 14px;
-        margin: 3px 0;
-        justify-content: center;
-    }
-    .combo-display {
-        font-size: 11px;
-    }
-    .stat-item {
-        font-size: 12px;
-        margin: 2px 0;
-        display: block;
-    }
-    
-    /* Options button */
-    .options-btn {
-        width: 100%;
-        padding: 8px 12px;
-        font-size: 12px;
-        min-height: 32px;
-        margin: 5px 0;
-    }
-    
-    /* Active relics grid specifics */
-    .active-relics-container h4 {
-        font-size: 12px;
-        margin: 0 0 5px 0;
-    }
-    .active-relics-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        max-height: 80px;
-        gap: 4px;
-        padding: 2px;
-        font-size: 10px;
-        overflow-y: auto;
-    }
-    .relic {
-        padding: 4px;
-        margin-bottom: 0;
-    }
-    .relic-name {
-        font-size: 10px;
-        margin-bottom: 2px;
-    }
-    .relic-desc {
-        font-size: 9px;
-        line-height: 1.2;
-    }
-    
-    /* Consumables and boosters */
-    .consumables-panel,
-    .boosters-panel,
-    .available-boosters-panel {
-        padding: 8px;
-        margin: 5px 0;
-        width: 100%;
-    }
-    .consumables-panel h4,
-    .boosters-panel h4,
-    .available-boosters-panel h4 {
-        font-size: 12px;
-        margin-bottom: 5px;
-    }
-    .consumable-btn, .booster-btn {
-        padding: 6px 8px;
-        font-size: 9px;
-        min-height: 28px;
-        margin: 2px;
-    }
-    .consumable-count, .booster-count {
-        width: 14px;
-        height: 14px;
-        font-size: 8px;
-        top: -3px;
-        right: -3px;
-    }
+  body {
+    overflow-x: hidden;
+    overflow-y: auto; /* Vertical scroll */
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  .game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 5px;
+    gap: 5px;
+    min-height: 100vh;
+  }
+
+  .board-wrapper,
+  .controls-sidebar {
+    width: 100%;
+  }
 }
 
-/* Small screens */
-@media screen and (max-width: 380px) {
-    .game-board {
-        width: calc(100vw - 15px);
-        height: calc(100vw - 15px);
-        max-width: 320px;
-        max-height: 320px;
-        padding: 8px;
-    }
-    .gem {
-        font-size: min(4vw, 22px);
-    }
-    .gem-value-display {
-        font-size: min(1.8vw, 9px);
-    }
-    .title {
-        font-size: 16px;
-    }
-    .score-display {
-        font-size: 20px;
-    }
-}
+/* Portrait orientation */
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  /* Board first */
+  .board-wrapper {
+    order: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
-/* Very small screens */
-@media screen and (max-width: 320px) {
-    .game-board {
-        width: calc(100vw - 10px);
-        height: calc(100vw - 10px);
-        padding: 6px;
-        gap: 1px;
-    }
-    .gem {
-        width: calc((100% - 6px) / 7);
-        height: calc((100% - 6px) / 7);
-        font-size: 20px;
-    }
-    .gem-value-display {
-        font-size: 9px;
-    }
-}
+  .board-wrapper .game-board {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    width: calc(100vw - 20px);
+    height: calc(100vw - 20px);
+    max-width: 350px;
+    max-height: 350px;
+    padding: 10px;
+    gap: 2px;
+    margin: 0;
+  }
 
-/* Tall phones */
-@media screen and (min-height: 800px) and (max-width: 768px) {
-    .game-container {
-        gap: 10px;
-        padding: 10px;
-    }
-    .game-board {
-        width: calc(100vw - 30px);
-        height: calc(100vw - 30px);
-        max-width: 380px;
-        max-height: 380px;
-        padding: 12px;
-        gap: 3px;
-    }
-    .gem {
-        width: calc((100% - 8px) / 7);
-        height: calc((100% - 8px) / 7);
-        font-size: 26px;
-    }
-    .gem-value-display {
-        font-size: 11px;
-    }
-    .stats-panel {
-        padding: 12px;
-        gap: 8px;
-    }
-    .score-display {
-        font-size: 24px;
-    }
-    .active-relics-grid {
-        max-height: 100px;
-    }
+  /* Stats below board */
+  .stats-panel {
+    order: 2;
+    padding: 10px;
+    margin: 5px 0;
+    width: calc(100vw - 20px);
+  }
+
+  /* Active relics last */
+  .active-relics-container {
+    order: 3;
+    padding: 5px;
+    margin: 5px 0;
+    width: calc(100vw - 20px);
+  }
 }
 
 /* Landscape orientation */
-@media screen and (max-height: 500px) and (orientation: landscape) and (max-width: 768px) {
-    body {
-        overflow-y: auto;
-    }
-    .game-container {
-        display: flex;
-        flex-direction: row;
-        align-items: flex-start;
-        justify-content: space-between;
-        padding: 5px;
-        gap: 10px;
-        min-height: auto;
-    }
+@media screen and (max-width: 768px) and (orientation: landscape) {
+  .game-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 5px;
+    gap: 10px;
+  }
 
-    /* Left: title + board */
-    .game-container > div:first-child {
-        order: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 5px;
-        flex: 0 0 auto;
-    }
-    .title {
-        font-size: 14px;
-        margin: 2px 0;
-    }
-    .game-board {
-        width: min(45vh, 250px);
-        height: min(45vh, 250px);
-        padding: 8px;
-    }
-    .gem {
-        font-size: min(2.5vh, 18px);
-    }
-    .gem-value-display {
-        font-size: min(1.2vh, 8px);
-    }
+  /* Left column: board */
+  .board-wrapper {
+    order: 1;
+    flex: 0 0 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
-    /* Right: stats then active relics then others */
-    .stats-panel {
-        order: 2;
-        width: 100%;
-    }
-    .active-relics-container {
-        order: 3;
-        width: 100%;
-        margin-top: 5px;
-        padding: 4px;
-    }
-    .consumables-panel, .boosters-panel, .available-boosters-panel {
-        order: 4;
-        width: 100%;
-        margin-top: 5px;
-    }
+  .board-wrapper .game-board {
+    width: 90%;
+    height: auto;
+    max-width: none;
+  }
+
+  /* Right column: sidebar */
+  .controls-sidebar {
+    order: 2;
+    flex: 1;
+    max-width: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    padding: 0 5px;
+  }
+
+  .controls-sidebar .stats-panel {
+    order: 1;
+    width: 100%;
+  }
+
+  .controls-sidebar .active-relics-container {
+    order: 2;
+    width: 100%;
+  }
+
+  .controls-sidebar .consumables-panel,
+  .controls-sidebar .boosters-panel,
+  .controls-sidebar .available-boosters-panel {
+    order: 3;
+    width: 100%;
+  }
 }
 
-/* Modal overlays */
+/* Shared styling for titles, boards, gems, stats, etc. */
+.title {
+  font-size: 18px;
+  margin: 5px 0;
+  line-height: 1;
+}
+
+.game-board {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(7, 1fr);
+  margin: 0;
+}
+
+.gem {
+  width: 100%;
+  height: 100%;
+  font-size: min(3.5vw, 24px);
+  border-radius: 6px;
+  border-width: 2px;
+}
+
+.gem-value-display {
+  font-size: min(1.5vw, 10px);
+  bottom: 2px;
+  right: 2px;
+}
+
+.floor-info,
+.moves-left,
+.progress-bar,
+.score-display,
+.crystal-display,
+.combo-display,
+.stat-item {
+  width: 100%;
+  text-align: center;
+  margin: 0;
+}
+
+.floor-info,
+.moves-left {
+  font-size: 14px;
+}
+
+.progress-bar {
+  height: 14px;
+  margin: 3px 0;
+}
+
+.score-display {
+  font-size: 22px;
+}
+
+.crystal-display {
+  font-size: 14px;
+  margin: 3px 0;
+  justify-content: center;
+}
+
+.combo-display {
+  font-size: 11px;
+}
+
+.stat-item {
+  font-size: 12px;
+  margin: 2px 0;
+}
+
+.options-btn {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 12px;
+  min-height: 32px;
+  margin: 5px 0;
+}
+
+.active-relics-container h4 {
+  font-size: 12px;
+  margin: 0 0 5px 0;
+}
+
+.active-relics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 2px;
+  font-size: 10px;
+  overflow-y: auto;
+  max-height: 80px;
+}
+
+.relic {
+  padding: 4px;
+  margin-bottom: 0;
+}
+
+.relic-name {
+  font-size: 10px;
+  margin-bottom: 2px;
+}
+
+.relic-desc {
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.consumables-panel,
+.boosters-panel,
+.available-boosters-panel {
+  padding: 8px;
+  margin: 5px 0;
+  width: 100%;
+}
+
+.consumables-panel h4,
+.boosters-panel h4,
+.available-boosters-panel h4 {
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.consumable-btn,
+.booster-btn {
+  padding: 6px 8px;
+  font-size: 9px;
+  min-height: 28px;
+  margin: 2px;
+}
+
+.consumable-count,
+.booster-count {
+  width: 14px;
+  height: 14px;
+  font-size: 8px;
+  top: -3px;
+  right: -3px;
+}
+
+/* Additional smaller breakpoints (unchanged) */
+@media screen and (max-width: 380px) {
+  .title {
+    font-size: 16px;
+  }
+
+  .score-display {
+    font-size: 20px;
+  }
+
+  .game-board {
+    width: calc(100vw - 15px);
+    height: calc(100vw - 15px);
+    max-width: 320px;
+    max-height: 320px;
+    padding: 8px;
+  }
+
+  .gem {
+    font-size: min(4vw, 22px);
+  }
+
+  .gem-value-display {
+    font-size: min(1.8vw, 9px);
+  }
+}
+
+@media screen and (max-width: 320px) {
+  .game-board {
+    width: calc(100vw - 10px);
+    height: calc(100vw - 10px);
+    padding: 6px;
+    gap: 1px;
+  }
+
+  .gem {
+    width: calc((100% - 6px) / 7);
+    height: calc((100% - 6px) / 7);
+    font-size: 20px;
+  }
+
+  .gem-value-display {
+    font-size: 9px;
+  }
+}
+
+@media screen and (min-height: 800px) and (max-width: 768px) {
+  .game-container {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .game-board {
+    width: calc(100vw - 30px);
+    height: calc(100vw - 30px);
+    max-width: 380px;
+    max-height: 380px;
+    padding: 12px;
+    gap: 3px;
+  }
+
+  .gem {
+    width: calc((100% - 8px) / 7);
+    height: calc((100% - 8px) / 7);
+    font-size: 26px;
+  }
+
+  .gem-value-display {
+    font-size: 11px;
+  }
+
+  .stats-panel {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .scoredisplay {
+    font-size: 24px;
+  }
+
+  .activerelicsgrid {
+    max-height: 100px;
+  }
+}
+
 @media screen and (max-width: 768px) {
-    .game-over,
-    .shop-screen,
-    .options-screen,
-    .purchase-confirmation,
-    .gem-selection-modal {
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-    .relic-option {
-        padding: 10px;
-        margin-bottom: 8px;
-    }
-    .relic-option-name {
-        font-size: 13px;
-    }
-    .relic-option-desc {
-        font-size: 11px;
-    }
-    .ingame-audio-toggle {
-        width: 35px;
-        height: 35px;
-        font-size: 16px;
-        top: 5px;
-        left: 5px;
-        position: fixed;
-        z-index: 1001;
-    }
-    .combo-indicator {
-        font-size: 24px;
-        position: fixed;
-        top: 40%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
+  .game-over,
+  .shop-screen,
+  .optionsscreen,
+  .purchaseconfirmation,
+  .gemselectionmodal {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .relicoption {
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+
+  .relicoptionname {
+    font-size: 13px;
+  }
+
+  .relicoptiondesc {
+    font-size: 11px;
+  }
+
+  .ingameaudiotoggle {
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+    top: 5px;
+    left: 5px;
+    position: fixed;
+    z-index: 1001;
+  }
+
+  .comboindicator {
+    font-size: 24px;
+    position: fixed;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
 }
 
 /* Remove fixed positioning that prevents scrolling */
 html {
-    overflow-y: auto;
-    position: relative;
-    width: 100%;
-    min-height: 100%;
+  overflow-y: auto;
+  position: relative;
+  width: 100%;
+  min-height: 100%;
 }
 
 /* Safe area adjustments */
 @supports (padding: max(0px)) {
-    @media screen and (max-width: 768px) {
-        .game-container {
-            padding-top: max(5px, env(safe-area-inset-top));
-            padding-bottom: max(10px, env(safe-area-inset-bottom));
-            padding-left: max(5px, env(safe-area-inset-left));
-            padding-right: max(5px, env(safe-area-inset-right));
-        }
+  @media screen and (max-width: 768px) {
+    .game-container {
+      padding-top: max(5px, env(safe-area-inset-top));
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
+      padding-left: max(5px, env(safe-area-inset-left));
+      padding-right: max(5px, env(safe-area-inset-right));
     }
+  }
 }
+
 
 </style>
 </head>
