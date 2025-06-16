@@ -1983,6 +1983,9 @@ transition: transform 0.6s ease-out;
 				this.interactionsDisabled = false;
 				this.originalTargetScore = null;
 
+				this.consumableUsesThisFloor = 0;
+				this.boosterUsesThisFloor = 0;
+  
 				this.scorePopupQueue = [];
 				this.isProcessingPopups = false;
 	
@@ -3194,6 +3197,7 @@ transition: transform 0.6s ease-out;
 			}
 			
             actuallyShowRelicSelection() {
+				this.disableAllInteractions();
                 const relicScreen = document.getElementById('relicSelectionScreen');
                 const relicOptions = document.getElementById('relicOptions');
                 
@@ -3396,7 +3400,11 @@ transition: transform 0.6s ease-out;
 				
 				if (hasConsumables) {
 					panel.style.display = 'block';
-					
+
+					// update header to show how many of 2 used
+					const hdr = panel.querySelector('h4');
+					if (hdr) hdr.textContent = `💫 Consumables (${this.consumableUsesThisFloor}/2)`;
+
 					for (const itemId in this.consumableInventory) {
 						if (this.consumableInventory[itemId] > 0) {
 							const item = this.shopItems.consumables.find(c => c.id === itemId);
@@ -3458,6 +3466,15 @@ transition: transform 0.6s ease-out;
 					} else if (itemId === 'time_freeze') {
 						this.applyTimeFreeze();
 					}
+				}
+
+				// track and charge move every 2 uses this floor
+				this.consumableUsesThisFloor++;
+				if (this.consumableUsesThisFloor >= 2) {
+				  this.consumableUsesThisFloor -= 2;
+				  this.moves--;
+				  this.showComboIndicator('💫 2 consumables used → –1 Move');
+				  this.updateUI();
 				}
 			}
 
@@ -3837,7 +3854,11 @@ transition: transform 0.6s ease-out;
 				
 				if (hasAvailableBoosters) {
 					panel.style.display = 'block';
-					
+
+					// show booster uses out of 4
+					const hdr = panel.querySelector('h4');
+					if (hdr) hdr.textContent = `💫 Available Boosters (${this.boosterUsesThisFloor}/4)`;
+
 					for (const boosterId in this.runBoosters) {
 						if (this.runBoosters[boosterId] > 0) {
 							const item = this.shopItems.boosters.find(b => b.id === boosterId);
@@ -3941,7 +3962,16 @@ transition: transform 0.6s ease-out;
 						this.showComboIndicator('🌊 CASCADE CATALYST PRIMED! (1 use)');
 						break;
 				}
-				
+
+				// track and charge move every 4 boosters this floor
+				this.boosterUsesThisFloor++;
+				if (this.boosterUsesThisFloor >= 4) {
+				  this.boosterUsesThisFloor -= 4;
+				  this.moves--;
+				  this.showComboIndicator('⚡ 4 boosters used → –1 Move');
+				  this.updateUI();
+				}
+
 				this.updateBoostersDisplay();
 			}
 
@@ -4547,6 +4577,12 @@ transition: transform 0.6s ease-out;
                 
                 const progress = Math.min(100, (this.score / this.targetScore) * 100);
                 document.getElementById('progressFill').style.width = progress + '%';
+
+				const cu = document.getElementById('consumableUsesDisplay');
+				if (cu) cu.textContent = `${this.consumableUsesThisFloor}/2`;
+				const bu = document.getElementById('boosterUsesDisplay');
+				if (bu) bu.textContent = `${this.boosterUsesThisFloor}/4`;
+  
             }
 
             checkGameState() {
@@ -4566,7 +4602,10 @@ transition: transform 0.6s ease-out;
 
 			nextFloor() {
 				this.floor++;
-				
+
+				this.consumableUsesThisFloor = 0;
+				this.boosterUsesThisFloor = 0;
+
 				// Calculate NEW target score based on floor progression (not reduced score)
 				const baseTargetScore = Math.floor(800 * Math.pow(1.45, this.floor - 1));
 				this.targetScore = baseTargetScore;
@@ -4674,6 +4713,7 @@ transition: transform 0.6s ease-out;
             }
 
 			showGameOver() {
+				this.disableAllInteractions();
 				console.log('showGameOver called - stopping all music');
 				
 				// Stop ALL background music immediately
@@ -4715,6 +4755,7 @@ transition: transform 0.6s ease-out;
 
             // Add all the missing match processing methods here...
             async processMatches() {
+				this.disableAllInteractions();
                 let totalMatches = 0;
                 let comboMultiplier = 1;
 				this.isCurrentlyScoring = false;
@@ -4872,13 +4913,20 @@ transition: transform 0.6s ease-out;
 
 					// 5) Quantum Mirror (🔮)
 					if (this.quantumMirror && this.lastMatchPattern) {
-						let mirrorScore = this.lastMatchPattern.reduce(
-							(sum, m) => sum + (this.board[m.row]?.[m.col]?.value || 0),
-							0
-						);
-						this.score += mirrorScore;
-						this.animateScoreIncrease(mirrorScore);
-						await new Promise(res => setTimeout(res, 10));
+					  // raw total of the mirrored gems
+					  const rawMirror = this.lastMatchPattern.reduce(
+						(sum, m) => sum + (this.board[m.row]?.[m.col]?.value || 0),
+						0
+					  );
+					  // apply floor multiplier, base multiplier, and current combo
+					  const finalMirror = Math.floor(
+						rawMirror
+						* this.multiplier
+						* this.baseMultiplier
+						* (this.currentCombo || 1)
+					  );
+					  this.score += finalMirror;
+					  this.animateScoreIncrease(finalMirror);
 					}
 
 					// 6) Entropy Engine (⚙️ every 5 cascades)
@@ -4913,6 +4961,7 @@ transition: transform 0.6s ease-out;
                 }
                 
                 this.hideComboDisplay();
+				this.enableAllInteractions();
             }
 
             findMatches() {
@@ -5336,7 +5385,10 @@ transition: transform 0.6s ease-out;
 				this.cascadeCount = 0;
 				this.currentCombo = 0;
 				this.isCurrentlyScoring = false;
-				
+
+				this.consumableUsesThisFloor = 0;
+				this.boosterUsesThisFloor = 0;
+
 				this.interactionsDisabled = false;
 				this.originalTargetScore = null;
 				
