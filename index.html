@@ -1823,26 +1823,32 @@ transition: transform 0.6s ease-out;
     
     /* Game board - slightly smaller gems */
     .game-board {
+		display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        grid-template-rows: repeat(7, 1fr);
         width: calc(100vw - 20px);
         height: calc(100vw - 20px);
         max-width: 350px;
         max-height: 350px;
         padding: 10px;
-        gap: 1px;
+        gap: 2px;
         margin: 0;
     }
     
     /* Slightly smaller gems to fit better */
     .gem {
-        width: calc((100% - 8px) / 7);
-        height: calc((100% - 8px) / 7);
-        font-size: 24px;
+        width: 100%;
+        height: 100%;
+        font-size: min(3.5vw, 24px);
         border-radius: 6px;
         border-width: 2px;
+        /* Remove any absolute sizing */
+        max-width: none;
+        max-height: none;
     }
     
     .gem-value-display {
-        font-size: 10px;
+        font-size: min(1.5vw, 10px);
         bottom: 2px;
         right: 2px;
     }
@@ -2001,9 +2007,11 @@ transition: transform 0.6s ease-out;
     }
     
     .gem {
-        width: calc((100% - 6px) / 7);
-        height: calc((100% - 6px) / 7);
-        font-size: 22px;
+        font-size: min(4vw, 22px);
+    }
+    
+    .gem-value-display {
+        font-size: min(1.8vw, 9px);
     }
     
     .title {
@@ -2112,9 +2120,11 @@ transition: transform 0.6s ease-out;
     }
     
     .gem {
-        width: calc((100% - 6px) / 7);
-        height: calc((100% - 6px) / 7);
-        font-size: 18px;
+        font-size: min(2.5vh, 18px);
+    }
+    
+    .gem-value-display {
+        font-size: min(1.2vh, 8px);
     }
     
     /* Active relics below board in landscape */
