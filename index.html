@@ -1257,18 +1257,73 @@ transition: transform 0.6s ease-out;
 }
 
 .enhanced-particles {
-    position: absolute;
-    pointer-events: none;
-    z-index: 5;
+  position: absolute;
+  top:0; left:0;
+  width:100vw; height:100vh;
+  pointer-events:none;
+  z-index: 99;
 }
 
 .particle {
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    background: radial-gradient(circle, currentColor, transparent);
-    border-radius: 50%;
-    animation: particleFloat 1s ease-out forwards;
+  position: absolute;
+  border-radius: 50%;
+  opacity: 1;
+  /* start small & bright */
+  width: var(--size, 6px);
+  height: var(--size, 6px);
+  background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 80%);
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.8));
+  animation: flashParticle var(--duration, 800ms) ease-out forwards;
+}
+
+@keyframes flashParticle {
+  0% {
+    transform: translate(0,0) scale(0.5);
+    opacity: 1;
+  }
+  30% {
+    transform: translate(var(--dx), var(--dy)) scale(1.2);
+    opacity: 0.9;
+  }
+  60% {
+    transform: translate(calc(var(--dx)*1.2), calc(var(--dy)*1.2)) scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(calc(var(--dx)*1.5), calc(var(--dy)*1.5)) scale(0.2);
+    opacity: 0;
+  }
+}
+
+/* 🌟 Star‐shaped sparkle */
+.sparkle-particle {
+  position: absolute;
+  --star-size: 12px; /* default size */
+  width: var(--size, var(--star-size));
+  height: var(--size, var(--star-size));
+  background: white;
+  /* 5-point star clip-path */
+  clip-path: polygon(
+    50% 0%,  61% 35%,  98% 35%,  68% 57%,
+    79% 91%, 50% 70%, 21% 91%, 32% 57%,
+    2% 35%, 39% 35%
+  );
+  filter:
+    drop-shadow(0 0 6px rgba(255,255,255,0.9))
+    drop-shadow(0 0 14px rgba(173,216,230,0.7));
+  animation: sparkle-anim var(--duration, 700ms) ease-out forwards;
+  z-index: 100;
+}
+
+@keyframes sparkle-anim {
+  0% {
+    transform: translate(0,0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0.2);
+    opacity: 0;
+  }
 }
 
 @keyframes particleFloat {
@@ -2008,6 +2063,9 @@ transition: transform 0.6s ease-out;
         class Gemspire {
 			constructor() {
 				this.board = [];
+				this.particleContainer = document.createElement('div');
+				this.particleContainer.className = 'enhanced-particles';
+				document.body.appendChild(this.particleContainer);
 				this.selectedGem = null;
 				this.score = 0;
 				this.displayScore = 0;
@@ -2079,7 +2137,8 @@ transition: transform 0.6s ease-out;
 				// Cosmetic system
 				this.activeTheme = this.loadActiveTheme();
 				this.particleEffects = this.purchasedUpgrades['particle_effects'] || false;
-
+				this.activeParticleEffects = this.particleEffects;
+				
 				// Consumable usage tracking
 				this.pendingConsumable = null;
 				
@@ -2424,7 +2483,11 @@ transition: transform 0.6s ease-out;
                 this.activeGemTheme = settings.activeGemTheme;
                 this.activeBoardTheme = settings.activeBoardTheme;
                 this.activeParticleEffects = settings.activeParticleEffects;
-                
+
+				this.particleContainer = document.createElement('div');
+				this.particleContainer.className = 'enhanced-particles';
+				document.body.appendChild(this.particleContainer);
+
                 // Apply volume settings
                 this.updateVolumeSettings();
             }
@@ -2451,25 +2514,21 @@ transition: transform 0.6s ease-out;
 				}
 			}		
 			
-            applyCurrentCosmetics() {
-                // Apply gem theme
-                if (this.activeGemTheme === 'neon' && this.purchasedUpgrades['gem_theme_neon']) {
-                    const gems = document.querySelectorAll('.gem');
-                    gems.forEach(gem => {
-                        gem.classList.add('neon-theme');
-                    });
-                }
-                
-                // Apply board theme
-                if (this.activeBoardTheme === 'space' && this.purchasedUpgrades['board_theme_space']) {
-                    const gameBoard = document.getElementById('gameBoard');
-                    if (gameBoard) {
-                        gameBoard.classList.add('space-theme');
-                    }
-                }
-                
-                // Particle effects are applied during matches if enabled
-            }
+			applyCurrentCosmetics() {
+			  // 1) strip out any old theme classes
+			  document.querySelectorAll('.gem.neon-theme').forEach(el => el.classList.remove('neon-theme'));
+			  document.getElementById('gameBoard').classList.remove('space-theme');
+
+			  // 2) apply the gem theme
+			  if (this.activeGemTheme === 'neon' && this.purchasedUpgrades['gem_theme_neon']) {
+				document.querySelectorAll('.gem').forEach(el => el.classList.add('neon-theme'));
+			  }
+
+			  // 3) apply the board theme
+			  if (this.activeBoardTheme === 'space' && this.purchasedUpgrades['board_theme_space']) {
+				document.getElementById('gameBoard').classList.add('space-theme');
+			  }
+			}
 
             updateOptionsMenu() {
                 // Update cosmetic selects based on ownership
@@ -2541,6 +2600,7 @@ transition: transform 0.6s ease-out;
                 if (animationsCheckbox) {
                     animationsCheckbox.checked = this.animations;
                 }
+				window.game.applyCurrentCosmetics();
             }
 
 			destroyAllAudio() {
@@ -2575,11 +2635,11 @@ transition: transform 0.6s ease-out;
 				// Create new game instance
 				game = new Gemspire();
 				if (audioEnabled) {
-					game.enableAudio();
+					window.game.enableAudio();
 				} else {
-					game.disableAudio();
+					window.game.disableAudio();
 				}
-				game.initializeGame();
+				window.game.initializeGame();
 			}
 
             grantStartingRelics() {
@@ -4599,25 +4659,32 @@ transition: transform 0.6s ease-out;
 				this.resetMatchCooldowns();
             }
 
-            updateGemElement(element, gem) {
-                element.className = `gem ${gem.type}`;
-                if (gem.value >= 50) {
-                    element.classList.add('special');
-                }
-                if (gem.isThunderbolt) {
-                    element.classList.add('thunderbolt');
-                }
-                element.textContent = gem.symbol;
-                
-                let valueDisplay = element.querySelector('.gem-value-display');
-                if (!valueDisplay) {
-                    valueDisplay = document.createElement('div');
-                    valueDisplay.className = 'gem-value-display';
-                    element.appendChild(valueDisplay);
-                }
-				element.dataset.gemId = gem.id;
-                valueDisplay.textContent = formatNumber(gem.value);
-            }
+			updateGemElement(element, gem) {
+			  // remember if neon was on
+			  const neonOn = element.classList.contains('neon-theme');
+
+			  // strip out any old type classes and re-add just “gem” + the type
+			  element.classList.remove(...this.gemTypes);
+			  element.classList.add('gem', gem.type);
+
+			  // reapply neon if needed
+			  if (neonOn) element.classList.add('neon-theme');
+
+			  // then your other flags
+			  if (gem.value >= 50) element.classList.add('special');
+			  if (gem.isThunderbolt) element.classList.add('thunderbolt');
+
+			  element.textContent = gem.symbol;
+
+			  // update the little value-display
+			  let vd = element.querySelector('.gem-value-display');
+			  if (!vd) {
+				vd = document.createElement('div');
+				vd.className = 'gem-value-display';
+				element.appendChild(vd);
+			  }
+			  vd.textContent = formatNumber(gem.value);
+			}
 
             updateUI() {
 				document.getElementById('scoreDisplay').textContent = formatNumber(this.score);
@@ -4633,7 +4700,7 @@ transition: transform 0.6s ease-out;
 				if (cu) cu.textContent = `${this.consumableUsesThisFloor}/2`;
 				const bu = document.getElementById('boosterUsesDisplay');
 				if (bu) bu.textContent = `${this.boosterUsesThisFloor}/4`;
-  
+				this.applyCurrentCosmetics();
             }
 
             checkGameState() {
@@ -4836,7 +4903,7 @@ transition: transform 0.6s ease-out;
                     this.currentCombo++;
                     
                     this.updateComboDisplay();
-                    
+
                     if (this.voidHunger) {
                         await this.processVoidHunger(matches);
                     }
@@ -4951,7 +5018,46 @@ transition: transform 0.6s ease-out;
                     }
                     
                     await new Promise(resolve => setTimeout(resolve, 200));
-                    
+
+					if (this.activeParticleEffects) {
+					  const containerRect = this.particleContainer.getBoundingClientRect();
+
+					  matches.forEach(({row, col}) => {
+						const gemEl = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+						if (!gemEl) return;
+
+						const { left, top, width, height } = gemEl.getBoundingClientRect();
+						const cx = left + width/2  - containerRect.left;
+						const cy = top  + height/2 - containerRect.top;
+
+						// spawn larger star sparkles
+						const count = 50;
+						for (let i = 0; i < count; i++) {
+						  const star = document.createElement('div');
+						  star.className = 'sparkle-particle';
+
+						  // random size 10–20px
+						  const size = 10 + Math.random()*10;
+						  star.style.setProperty('--size', `${size}px`);
+
+						  // random duration 500–900ms
+						  star.style.setProperty('--duration', `${500 + Math.random()*400}ms`);
+
+						  // random direction & distance 100–180px
+						  const angle = Math.random() * Math.PI * 2;
+						  const dist  = 100 + Math.random() * 80;
+						  star.style.setProperty('--dx', `${Math.cos(angle)*dist}px`);
+						  star.style.setProperty('--dy', `${Math.sin(angle)*dist}px`);
+
+						  star.style.left = `${cx}px`;
+						  star.style.top  = `${cy}px`;
+
+						  this.particleContainer.appendChild(star);
+						  star.addEventListener('animationend', () => star.remove(), { once: true });
+						}
+					  });
+					}
+					
                     await this.dropGems();
                     await this.fillEmptySpaces();
 
@@ -5637,7 +5743,7 @@ transition: transform 0.6s ease-out;
 		}
 			function openOptionsMenu() {
 				if (game) {
-					game.updateOptionsMenu();
+					window.game.updateOptionsMenu();
 				} else if (window.tempGameForMusic) {
                 window.tempGameForMusic.updateOptionsMenu();
             }
@@ -5646,13 +5752,14 @@ transition: transform 0.6s ease-out;
 
         function closeOptionsMenu() {
             document.getElementById('optionsScreen').style.display = 'none';
+			window.game.applyCurrentCosmetics();
         }
 
         function changeGemTheme() {
             const select = document.getElementById('gemThemeSelect');
             const newTheme = select.value;
             
-            const gameInstance = game || window.tempGameForMusic;
+            const gameInstance = window.game || window.tempGameForMusic;
             if (gameInstance) {
                 // Check if theme is owned
                 if (newTheme === 'neon' && !gameInstance.purchasedUpgrades['gem_theme_neon']) {
@@ -5674,7 +5781,7 @@ transition: transform 0.6s ease-out;
             const select = document.getElementById('boardThemeSelect');
             const newTheme = select.value;
             
-            const gameInstance = game || window.tempGameForMusic;
+            const gameInstance = window.game || window.tempGameForMusic;
             if (gameInstance) {
                 // Check if theme is owned
                 if (newTheme === 'space' && !gameInstance.purchasedUpgrades['board_theme_space']) {
@@ -5696,7 +5803,7 @@ transition: transform 0.6s ease-out;
             const select = document.getElementById('particleEffectsSelect');
             const enabled = select.value === 'true';
             
-            const gameInstance = game || window.tempGameForMusic;
+            const gameInstance = window.game || window.tempGameForMusic;
             if (gameInstance) {
                 // Check if effect is owned
                 if (enabled && !gameInstance.purchasedUpgrades['particle_effects']) {
@@ -5713,7 +5820,7 @@ transition: transform 0.6s ease-out;
             const slider = document.getElementById('musicVolumeSlider');
             const value = parseInt(slider.value);
             
-            const gameInstance = game || window.tempGameForMusic;
+            const gameInstance = window.game || window.tempGameForMusic;
             if (gameInstance) {
                 gameInstance.musicVolume = value;
                 gameInstance.updateVolumeSettings();
@@ -5726,7 +5833,7 @@ transition: transform 0.6s ease-out;
             const slider = document.getElementById('sfxVolumeSlider');
             const value = parseInt(slider.value);
             
-            const gameInstance = game || window.tempGameForMusic;
+            const gameInstance = window.game || window.tempGameForMusic;
             if (gameInstance) {
                 gameInstance.sfxVolume = value;
                 gameInstance.updateVolumeSettings();
@@ -5738,7 +5845,7 @@ transition: transform 0.6s ease-out;
         function toggleAutoSave() {
             const checkbox = document.getElementById('autoSaveCheckbox');
             
-            const gameInstance = game || window.tempGameForMusic;
+            const gameInstance = window.game || window.tempGameForMusic;
             if (gameInstance) {
                 gameInstance.autoSave = checkbox.checked;
                 gameInstance.saveGameSettings();
@@ -5748,7 +5855,7 @@ transition: transform 0.6s ease-out;
         function toggleAnimations() {
             const checkbox = document.getElementById('animationsCheckbox');
             
-            const gameInstance = game || window.tempGameForMusic;
+            const gameInstance = window.game || window.tempGameForMusic;
             if (gameInstance) {
                 gameInstance.animations = checkbox.checked;
                 gameInstance.saveGameSettings();
@@ -5763,7 +5870,7 @@ transition: transform 0.6s ease-out;
         }
 
         function resetOptions() {
-            const gameInstance = game || window.tempGameForMusic;
+            const gameInstance = window.game || window.tempGameForMusic;
             if (gameInstance) {
                 gameInstance.activeGemTheme = 'default';
                 gameInstance.activeBoardTheme = 'default';
@@ -5793,7 +5900,7 @@ transition: transform 0.6s ease-out;
             document.getElementById('purchaseConfirmation').style.display = 'none';
             document.getElementById('optionsScreen').style.display = 'none';
             
-            const gameInstance = game || window.tempGameForMusic;
+            const gameInstance = window.game || window.tempGameForMusic;
             if (gameInstance) {
                 // Force close the modal first
                 document.getElementById('gemSelectionModal').style.display = 'none';
