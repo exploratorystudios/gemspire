@@ -1802,39 +1802,40 @@ transition: transform 0.6s ease-out;
         line-height: 1;
     }
     
-    /* Game board - responsive but contained */
+    /* Game board - larger and extends to edges */
     .game-board {
-        width: min(70vw, 280px);
-        height: min(70vw, 280px);
-        padding: 8px;
+        width: calc(100vw - 20px); /* Full width minus small padding */
+        height: calc(100vw - 20px);
+        max-width: 350px;
+        max-height: 350px;
+        padding: 10px;
         gap: 2px;
         margin: 0;
     }
     
-    /* Smaller gems for compact board */
+    /* Adjusted gems for larger board */
     .gem {
-        width: calc((min(70vw, 280px) - 28px) / 7);
-        height: calc((min(70vw, 280px) - 28px) / 7);
-        font-size: 14px;
+        width: calc((100% - 12px) / 7);
+        height: calc((100% - 12px) / 7);
+        font-size: 16px;
         border-radius: 4px;
         border-width: 1px;
     }
     
     .gem-value-display {
-        font-size: 7px;
-        bottom: 0px;
+        font-size: 8px;
+        bottom: 1px;
         right: 1px;
     }
     
-    /* Compact stats panel - horizontal layout */
+    /* Compact stats panel - adjusted grid layout */
     .stats-panel {
-        padding: 8px;
-        width: 100%;
-        max-width: min(90vw, 350px);
+        padding: 10px;
+        width: calc(100vw - 20px);
+        max-width: 350px;
         display: grid;
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto auto auto;
-        gap: 5px;
+        gap: 6px;
         margin: 5px 0;
     }
     
@@ -1859,15 +1860,15 @@ transition: transform 0.6s ease-out;
     .progress-bar {
         grid-column: 1 / -1;
         grid-row: 2;
-        height: 12px;
-        margin: 2px 0;
+        height: 14px;
+        margin: 3px 0;
     }
     
-    /* Score and crystals in third row */
+    /* Score and crystals row */
     .score-display {
         grid-column: 1;
         grid-row: 3;
-        font-size: 20px;
+        font-size: 22px;
         margin: 0;
         text-align: left;
     }
@@ -1881,23 +1882,41 @@ transition: transform 0.6s ease-out;
         padding: 0;
     }
     
-    /* Combo display inline with score */
+    /* Combo display */
     .combo-display {
-        position: absolute;
-        font-size: 10px;
-        margin-left: 5px;
-        display: inline;
-    }
-    
-    /* Target and multiplier in compact row */
-    .stat-item {
+        grid-column: 1 / -1;
+        grid-row: 4;
         font-size: 11px;
-        margin: 2px 0;
+        margin: 0;
+        text-align: center;
     }
     
-    /* Options button - smaller and inline */
+    /* Target on its own line */
+    .stat-item:first-of-type {
+        grid-column: 1 / -1;
+        grid-row: 5;
+        font-size: 12px;
+        margin: 2px 0;
+        text-align: center;
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    /* Multiplier on its own line */
+    .stat-item:last-of-type {
+        grid-column: 1 / -1;
+        grid-row: 6;
+        font-size: 12px;
+        margin: 2px 0;
+        text-align: center;
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    /* Options button */
     .options-btn {
         grid-column: 1 / -1;
+        grid-row: 7;
         padding: 8px 12px;
         font-size: 12px;
         min-height: 32px;
@@ -1906,16 +1925,17 @@ transition: transform 0.6s ease-out;
     
     /* UI Panel container */
     .ui-panel {
-        width: 100%;
-        max-width: min(90vw, 350px);
+        width: calc(100vw - 20px);
+        max-width: 350px;
         gap: 5px;
         margin: 0;
         flex: 0 0 auto;
     }
     
-    /* Active relics - more compact */
+    /* Active relics - adjusted for wider layout */
     .active-relics-container {
-        width: min(90vw, 350px);
+        width: calc(100vw - 20px);
+        max-width: 350px;
         margin: 5px auto;
         padding: 5px;
     }
@@ -1948,12 +1968,13 @@ transition: transform 0.6s ease-out;
         line-height: 1.2;
     }
     
-    /* Consumables and boosters - ultra compact */
+    /* Consumables and boosters - adjusted width */
     .consumables-panel,
     .boosters-panel,
     .available-boosters-panel {
         padding: 8px;
         margin: 5px 0;
+        width: 100%;
     }
     
     .consumables-panel h4,
@@ -1995,18 +2016,17 @@ transition: transform 0.6s ease-out;
     }
 }
 
-/* Very small screens - even more compact */
-@media screen and (max-width: 380px) and (max-height: 700px) {
+/* Small screens - adjust proportions */
+@media screen and (max-width: 380px) {
     .game-board {
-        width: min(65vw, 250px);
-        height: min(65vw, 250px);
-        padding: 6px;
+        width: calc(100vw - 15px);
+        height: calc(100vw - 15px);
+        max-width: 320px;
+        max-height: 320px;
     }
     
     .gem {
-        width: calc((min(65vw, 250px) - 24px) / 7);
-        height: calc((min(65vw, 250px) - 24px) / 7);
-        font-size: 12px;
+        font-size: 14px;
     }
     
     .title {
@@ -2014,11 +2034,24 @@ transition: transform 0.6s ease-out;
     }
     
     .score-display {
-        font-size: 18px;
+        font-size: 20px;
+    }
+}
+
+/* Very small screens */
+@media screen and (max-width: 320px) {
+    .game-board {
+        width: calc(100vw - 10px);
+        height: calc(100vw - 10px);
+        padding: 8px;
     }
     
-    .active-relics-grid {
-        max-height: 50px;
+    .gem {
+        font-size: 12px;
+    }
+    
+    .gem-value-display {
+        font-size: 7px;
     }
 }
 
@@ -2030,20 +2063,24 @@ transition: transform 0.6s ease-out;
     }
     
     .game-board {
-        width: min(80vw, 320px);
-        height: min(80vw, 320px);
-        padding: 10px;
+        width: calc(100vw - 30px);
+        height: calc(100vw - 30px);
+        max-width: 380px;
+        max-height: 380px;
+        padding: 12px;
     }
     
     .gem {
-        width: calc((min(80vw, 320px) - 32px) / 7);
-        height: calc((min(80vw, 320px) - 32px) / 7);
-        font-size: 16px;
+        font-size: 18px;
     }
     
     .stats-panel {
         padding: 12px;
         gap: 8px;
+    }
+    
+    .score-display {
+        font-size: 24px;
     }
     
     .active-relics-grid {
@@ -2057,7 +2094,7 @@ transition: transform 0.6s ease-out;
         flex-direction: row;
         padding: 5px;
         align-items: flex-start;
-        justify-content: center;
+        justify-content: space-between;
         gap: 10px;
     }
     
@@ -2067,6 +2104,7 @@ transition: transform 0.6s ease-out;
         flex-direction: column;
         align-items: center;
         gap: 5px;
+        flex: 0 0 auto;
     }
     
     .title {
@@ -2075,20 +2113,19 @@ transition: transform 0.6s ease-out;
     }
     
     .game-board {
-        width: min(40vh, 220px);
-        height: min(40vh, 220px);
-        padding: 6px;
+        width: min(45vh, 250px);
+        height: min(45vh, 250px);
+        padding: 8px;
     }
     
     .gem {
-        width: calc((min(40vh, 220px) - 20px) / 7);
-        height: calc((min(40vh, 220px) - 20px) / 7);
-        font-size: 12px;
+        font-size: 14px;
     }
     
     /* Right side - UI panel */
     .ui-panel {
-        max-width: 45vw;
+        flex: 1;
+        max-width: calc(100vw - min(45vh, 250px) - 30px);
         overflow-y: auto;
         max-height: 95vh;
         padding-right: 5px;
@@ -2098,15 +2135,24 @@ transition: transform 0.6s ease-out;
         display: flex;
         flex-direction: column;
         gap: 5px;
+        width: 100%;
     }
     
+    /* Stack elements vertically in landscape */
     .floor-info, .moves-left {
         font-size: 12px;
         text-align: center;
+        width: 100%;
+    }
+    
+    .stat-item {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
     }
     
     .active-relics-container {
-        width: min(40vh, 220px);
+        width: min(45vh, 250px);
         margin-top: 5px;
         padding: 4px;
     }
@@ -2189,6 +2235,11 @@ html, body {
             padding-bottom: max(5px, env(safe-area-inset-bottom));
             padding-left: max(5px, env(safe-area-inset-left));
             padding-right: max(5px, env(safe-area-inset-right));
+        }
+        
+        .game-board {
+            width: calc(100vw - max(20px, env(safe-area-inset-left) + env(safe-area-inset-right) + 20px));
+            height: calc(100vw - max(20px, env(safe-area-inset-left) + env(safe-area-inset-right) + 20px));
         }
     }
 }
