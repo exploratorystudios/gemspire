@@ -79,9 +79,12 @@ body {
 .active-relics-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: auto;       /* allow each row to size to its content */
+  /* always have at least one row that’s at least 50px tall */
+  grid-template-rows: minmax(50px, auto);
+  /* any additional rows fall back to auto */
+  grid-auto-rows: auto;
   gap: 8px;
-  max-height: 150px;          /* increase as needed */
+  max-height: 150px;
   overflow-y: auto;
   padding: 4px;
   background: rgba(0,0,0,0.3);
