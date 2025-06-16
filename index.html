@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gemspire - Match-3 Roguelike</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
 
@@ -1769,6 +1771,471 @@ transition: transform 0.6s ease-out;
     background: linear-gradient(135deg, #9775fa, #7c3aed); 
     color: #fff; 
 }
+
+/* Mobile Responsive CSS for Gemspire */
+
+/* Base mobile styles */
+@media screen and (max-width: 768px) {
+    body {
+        overflow-x: hidden;
+        overflow-y: auto;
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    /* Main game container - vertical layout on mobile */
+    .game-container {
+        flex-direction: column;
+        padding: 10px;
+        gap: 10px;
+        align-items: center;
+        min-height: 100vh;
+    }
+    
+    /* Game board responsive sizing */
+    .game-board {
+        width: min(90vw, 350px);
+        height: min(90vw, 350px);
+        padding: 10px;
+        gap: 2px;
+    }
+    
+    /* Smaller gems on mobile */
+    .gem {
+        width: calc((min(90vw, 350px) - 32px) / 7);
+        height: calc((min(90vw, 350px) - 32px) / 7);
+        font-size: 18px;
+        border-radius: 6px;
+    }
+    
+    .gem-value-display {
+        font-size: 8px;
+        bottom: 1px;
+        right: 1px;
+    }
+    
+    /* UI Panel - full width on mobile */
+    .ui-panel {
+        width: 100%;
+        max-width: 350px;
+        gap: 10px;
+    }
+    
+    /* Stats panel adjustments */
+    .stats-panel {
+        padding: 15px;
+    }
+    
+    .moves-left {
+        font-size: 20px;
+    }
+    
+    .floor-info {
+        font-size: 16px;
+    }
+    
+    .stat-item {
+        font-size: 12px;
+    }
+    
+    /* Active relics container */
+    .active-relics-container {
+        width: min(90vw, 350px);
+        margin: 10px auto;
+        padding: 8px;
+    }
+    
+    .active-relics-grid {
+        grid-template-columns: repeat(2, 1fr);
+        max-height: 120px;
+        gap: 6px;
+    }
+    
+    /* Title adjustments */
+    .title {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+    
+    /* Score display */
+    .score-display {
+        font-size: 28px;
+    }
+    
+    /* Combo indicator positioning */
+    .combo-indicator {
+        font-size: 32px;
+    }
+    
+    /* Button sizes for touch */
+    .btn, .options-btn {
+        padding: 14px 20px;
+        font-size: 14px;
+        min-height: 44px; /* iOS touch target */
+    }
+    
+    /* Consumable and booster buttons */
+    .consumable-btn, .booster-btn {
+        padding: 10px 14px;
+        font-size: 10px;
+        min-height: 40px;
+    }
+    
+    .consumable-count, .booster-count {
+        width: 16px;
+        height: 16px;
+        font-size: 9px;
+    }
+    
+    /* Relics panel */
+    .relics-panel {
+        max-height: 250px;
+        padding: 15px;
+    }
+    
+    .relic {
+        padding: 8px;
+        margin-bottom: 8px;
+    }
+    
+    .relic-name {
+        font-size: 13px;
+    }
+    
+    .relic-desc {
+        font-size: 11px;
+    }
+}
+
+/* Small mobile screens */
+@media screen and (max-width: 380px) {
+    .game-board {
+        width: calc(100vw - 20px);
+        height: calc(100vw - 20px);
+        padding: 8px;
+    }
+    
+    .gem {
+        width: calc((100vw - 44px) / 7);
+        height: calc((100vw - 44px) / 7);
+        font-size: 16px;
+    }
+    
+    .active-relics-container {
+        width: calc(100vw - 20px);
+    }
+    
+    .title {
+        font-size: 20px;
+    }
+    
+    .score-display {
+        font-size: 24px;
+    }
+}
+
+/* Modal and overlay adjustments for mobile */
+@media screen and (max-width: 768px) {
+    /* Start screen */
+    .start-screen {
+        padding: 20px;
+    }
+    
+    .start-title {
+        font-size: 48px;
+        margin-bottom: 20px;
+    }
+    
+    .start-subtitle {
+        font-size: 18px;
+        margin-bottom: 30px;
+    }
+    
+    .btn-start {
+        padding: 16px 32px;
+        font-size: 16px;
+    }
+    
+    .game-rules {
+        margin: 20px;
+        padding: 20px;
+        max-width: 90vw;
+    }
+    
+    .rules-title {
+        font-size: 18px;
+    }
+    
+    .rules-text {
+        font-size: 13px;
+    }
+    
+    /* Game over screens */
+    .game-over {
+        width: 90vw;
+        max-width: 400px;
+        padding: 30px 20px;
+    }
+    
+    /* Relic selection */
+    .relic-option {
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+    
+    .relic-option-name {
+        font-size: 14px;
+    }
+    
+    .relic-option-desc {
+        font-size: 12px;
+    }
+    
+    /* Shop screen */
+    .shop-container {
+        padding: 20px 10px;
+    }
+    
+    .shop-title {
+        font-size: 32px;
+    }
+    
+    .shop-crystal-display {
+        font-size: 18px;
+        padding: 10px 20px;
+    }
+    
+    .shop-tabs {
+        gap: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .shop-tab {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+    
+    .shop-items {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .shop-item {
+        padding: 15px;
+    }
+    
+    .shop-item-name {
+        font-size: 16px;
+    }
+    
+    .shop-item-desc {
+        font-size: 13px;
+    }
+    
+    /* Options screen */
+    .options-container {
+        padding: 20px 10px;
+    }
+    
+    .options-title {
+        font-size: 24px;
+    }
+    
+    .options-section {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .options-section-title {
+        font-size: 18px;
+    }
+    
+    .cosmetic-select, .volume-slider {
+        min-width: 120px;
+        font-size: 12px;
+    }
+    
+    /* Audio permission screen */
+    .audio-permission-container {
+        padding: 30px 20px;
+        width: 90vw;
+        max-width: 500px;
+    }
+    
+    .audio-permission-title {
+        font-size: 36px;
+        white-space: normal;
+        line-height: 1.2;
+    }
+    
+    .audio-permission-text {
+        font-size: 20px;
+    }
+    
+    .audio-permission-subtext {
+        font-size: 14px;
+    }
+    
+    .audio-btn {
+        padding: 12px 20px;
+        font-size: 14px;
+        min-width: 150px;
+    }
+    
+    /* Purchase confirmation */
+    .purchase-confirmation {
+        width: 90vw;
+        max-width: 350px;
+        padding: 20px;
+    }
+    
+    .confirmation-title {
+        font-size: 20px;
+    }
+    
+    .confirmation-text {
+        font-size: 14px;
+    }
+    
+    /* Gem selection modal */
+    .gem-selection-modal {
+        width: 90vw;
+        max-width: 350px;
+        padding: 20px;
+    }
+    
+    .gem-selection-title {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .gem-type-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    /* In-game audio toggle */
+    .ingame-audio-toggle {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        top: 10px;
+        left: 10px;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    .game-container {
+        flex-direction: row;
+        padding: 5px;
+    }
+    
+    .game-board {
+        width: min(45vh, 300px);
+        height: min(45vh, 300px);
+    }
+    
+    .gem {
+        width: calc((min(45vh, 300px) - 28px) / 7);
+        height: calc((min(45vh, 300px) - 28px) / 7);
+    }
+    
+    .ui-panel {
+        width: auto;
+        max-width: 40vw;
+        overflow-y: auto;
+        max-height: 90vh;
+    }
+    
+    .active-relics-container {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(45vh, 300px);
+    }
+    
+    .title {
+        font-size: 18px;
+        margin-bottom: 5px;
+    }
+}
+
+/* Touch interaction improvements */
+@media (hover: none) and (pointer: coarse) {
+    /* Remove hover effects on touch devices */
+    .gem:hover {
+        transform: none;
+    }
+    
+    /* Larger touch targets */
+    .gem {
+        cursor: default;
+    }
+    
+    /* Ensure buttons are touch-friendly */
+    button {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    
+    /* Prevent double-tap zoom */
+    * {
+        touch-action: pan-x pan-y;
+    }
+}
+
+/* Scrollbar styling for mobile */
+@media screen and (max-width: 768px) {
+    ::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: rgba(124, 58, 237, 0.3);
+        border-radius: 2px;
+    }
+}
+
+/* Animation performance for mobile */
+@media screen and (max-width: 768px) {
+    /* Reduce animation complexity on mobile */
+    .gem {
+        transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    /* Simpler particle effects */
+    .bg-particle {
+        width: 2px;
+        height: 2px;
+    }
+}
+
+/* Safe area insets for modern phones */
+@supports (padding: max(0px)) {
+    .game-container {
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+    
+    .ingame-audio-toggle {
+        top: max(10px, env(safe-area-inset-top));
+        left: max(10px, env(safe-area-inset-left));
+    }
+}
+
 </style>
 </head>
 <body>
