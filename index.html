@@ -1792,211 +1792,49 @@ transition: transform 0.6s ease-out;
         min-height: 100vh;
     }
     
-    /* Game board responsive sizing */
-    .game-board {
-        width: min(90vw, 350px);
-        height: min(90vw, 350px);
-        padding: 10px;
-        gap: 2px;
+    /* Reorder the main layout on mobile */
+    .game-container > div:first-child {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        order: 1;
     }
     
-    /* Smaller gems on mobile */
-    .gem {
-        width: calc((min(90vw, 350px) - 32px) / 7);
-        height: calc((min(90vw, 350px) - 32px) / 7);
-        font-size: 18px;
-        border-radius: 6px;
-    }
-    
-    .gem-value-display {
-        font-size: 8px;
-        bottom: 1px;
-        right: 1px;
-    }
-    
-    /* UI Panel - full width on mobile */
+    /* UI Panel (contains stats and other panels) */
     .ui-panel {
+        order: 0;
         width: 100%;
         max-width: 350px;
         gap: 10px;
+        margin-bottom: 10px;
     }
     
-    /* Stats panel adjustments */
+    /* Move just the stats panel to the top */
     .stats-panel {
-        padding: 15px;
+        order: -1;
+        margin-bottom: 15px;
     }
     
-    .moves-left {
-        font-size: 20px;
+    /* Game board container */
+    .game-board-container {
+        order: 2;
     }
     
-    .floor-info {
-        font-size: 16px;
-    }
-    
-    .stat-item {
-        font-size: 12px;
-    }
-    
-    /* Active relics container */
+    /* Active relics below game board */
     .active-relics-container {
+        order: 3;
         width: min(90vw, 350px);
         margin: 10px auto;
         padding: 8px;
     }
     
-    .active-relics-grid {
-        grid-template-columns: repeat(2, 1fr);
-        max-height: 120px;
-        gap: 6px;
-    }
-    
-    /* Title adjustments */
-    .title {
-        font-size: 24px;
-        margin-bottom: 10px;
-    }
-    
-    /* Score display */
-    .score-display {
-        font-size: 28px;
-    }
-    
-    /* Combo indicator positioning */
-    .combo-indicator {
-        font-size: 32px;
-    }
-    
-    /* Button sizes for touch */
-    .btn, .options-btn {
-        padding: 14px 20px;
-        font-size: 14px;
-        min-height: 44px; /* iOS touch target */
-    }
-    
-    /* Consumable and booster buttons */
-    .consumable-btn, .booster-btn {
-        padding: 10px 14px;
-        font-size: 10px;
-        min-height: 40px;
-    }
-    
-    .consumable-count, .booster-count {
-        width: 16px;
-        height: 16px;
-        font-size: 9px;
-    }
-    
-    /* Relics panel */
-    .relics-panel {
-        max-height: 250px;
-        padding: 15px;
-    }
-    
-    .relic {
-        padding: 8px;
-        margin-bottom: 8px;
-    }
-    
-    .relic-name {
-        font-size: 13px;
-    }
-    
-    .relic-desc {
-        font-size: 11px;
-    }
-}
-
-/* Small mobile screens */
-@media screen and (max-width: 380px) {
-    .game-board {
-        width: calc(100vw - 20px);
-        height: calc(100vw - 20px);
-        padding: 8px;
-    }
-    
-    .gem {
-        width: calc((100vw - 44px) / 7);
-        height: calc((100vw - 44px) / 7);
-        font-size: 16px;
-    }
-    
-    .active-relics-container {
-        width: calc(100vw - 20px);
-    }
-    
-    .title {
-        font-size: 20px;
-    }
-    
-    .score-display {
-        font-size: 24px;
-    }
-}
-
-/* Mobile Responsive CSS for Gemspire */
-
-/* Base mobile styles */
-@media screen and (max-width: 768px) {
-    body {
-        overflow-x: hidden;
-        overflow-y: auto;
-        height: auto;
-        min-height: 100vh;
-    }
-    
-    /* Main game container - vertical layout on mobile */
-    .game-container {
-        flex-direction: column;
-        padding: 10px;
-        gap: 10px;
-        align-items: center;
-        min-height: 100vh;
-    }
-    
-    /* Game board container wrapper for reordering */
-    .game-board-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-    }
-    
-    /* Move floor info out of stats panel and above relics */
-    .floor-info {
-        order: -2;
-        font-size: 18px;
-        font-weight: bold;
-        margin-bottom: 10px;
-        padding: 8px 16px;
-        background: rgba(124, 58, 237, 0.2);
-        border: 2px solid rgba(124, 58, 237, 0.4);
-        border-radius: 8px;
-        text-align: center;
-        width: min(90vw, 350px);
-    }
-    
     /* Game board responsive sizing */
     .game-board {
-        order: -1;
         width: min(90vw, 350px);
         height: min(90vw, 350px);
         padding: 10px;
         gap: 2px;
-        margin-bottom: 10px;
-    }
-    
-    /* Active relics container positioning */
-    .active-relics-container {
-        order: 0;
-        width: min(90vw, 350px);
-        margin: 0 auto 10px;
-        padding: 8px;
-    }
-    
-    /* Hide floor info in stats panel on mobile */
-    .stats-panel .floor-info {
-        display: none;
     }
     
     /* Smaller gems on mobile */
@@ -2013,21 +1851,19 @@ transition: transform 0.6s ease-out;
         right: 1px;
     }
     
-    /* UI Panel - full width on mobile */
-    .ui-panel {
-        width: 100%;
-        max-width: 350px;
-        gap: 10px;
-    }
-    
     /* Stats panel adjustments */
     .stats-panel {
         padding: 15px;
+        width: 100%;
+        max-width: 350px;
     }
     
     .moves-left {
         font-size: 20px;
-        margin-top: 0;
+    }
+    
+    .floor-info {
+        font-size: 16px;
     }
     
     .stat-item {
@@ -2099,6 +1935,13 @@ transition: transform 0.6s ease-out;
     .relic-desc {
         font-size: 11px;
     }
+    
+    /* Ensure other panels stay in order */
+    .consumables-panel,
+    .boosters-panel,
+    .available-boosters-panel {
+        order: 5;
+    }
 }
 
 /* Small mobile screens */
@@ -2119,9 +1962,8 @@ transition: transform 0.6s ease-out;
         width: calc(100vw - 20px);
     }
     
-    .floor-info {
-        width: calc(100vw - 20px);
-        font-size: 16px;
+    .stats-panel {
+        max-width: calc(100vw - 20px);
     }
     
     .title {
@@ -2329,24 +2171,32 @@ transition: transform 0.6s ease-out;
     .game-container {
         flex-direction: row;
         padding: 5px;
+        align-items: flex-start;
     }
     
-    /* In landscape, keep floor info at top of left column */
-    .game-board-container {
+    /* Left column: title, board, active relics */
+    .game-container > div:first-child {
+        order: 1;
         display: flex;
         flex-direction: column;
     }
     
-    .floor-info {
-        order: -2;
-        width: min(45vh, 300px);
-        margin-bottom: 5px;
-        font-size: 16px;
-        padding: 6px 12px;
+    /* Right column: UI panel with stats */
+    .ui-panel {
+        order: 2;
+        width: auto;
+        max-width: 40vw;
+        overflow-y: auto;
+        max-height: 90vh;
+        margin-bottom: 0;
+    }
+    
+    .stats-panel {
+        order: 0;
+        margin-bottom: 10px;
     }
     
     .game-board {
-        order: -1;
         width: min(45vh, 300px);
         height: min(45vh, 300px);
     }
@@ -2356,16 +2206,7 @@ transition: transform 0.6s ease-out;
         height: calc((min(45vh, 300px) - 28px) / 7);
     }
     
-    .ui-panel {
-        width: auto;
-        max-width: 40vw;
-        overflow-y: auto;
-        max-height: 90vh;
-    }
-    
     .active-relics-container {
-        order: 0;
-        position: relative;
         width: min(45vh, 300px);
         margin-top: 5px;
     }
