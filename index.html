@@ -1769,6 +1769,157 @@ transition: transform 0.6s ease-out;
     background: linear-gradient(135deg, #9775fa, #7c3aed); 
     color: #fff; 
 }
+
+/* === Mobile Responsive Overrides === */
+@media (max-width: 800px) {
+  /* Stack game and UI panels vertically */
+  .game-container {
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    gap: 10px;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  /* Shrink board to fit width */
+  .game-board {
+    width: min(90vw, 360px) !important;
+    height: min(90vw, 360px) !important;
+    padding: 10px;
+    gap: 3px;
+  }
+
+  /* Gems adapt to smaller board */
+  .gem {
+    width: calc((100% - (6 * 3px)) / 7) !important;
+    height: calc((100% - (6 * 3px)) / 7) !important;
+    font-size: 18px;
+  }
+  .gem .gem-value-display {
+    font-size: 8px;
+  }
+
+  /* Relics container centered under board */
+  .active-relics-container {
+    width: min(90vw, 360px);
+    margin-top: 8px;
+  }
+  .active-relics-grid {
+    gap: 6px;
+  }
+  .active-relics-grid .relic {
+    font-size: 10px;
+    padding: 4px;
+  }
+
+  /* Stats panel full width */
+  .ui-panel {
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .stats-panel {
+    padding: 15px;
+  }
+  .stat-item { font-size: 12px; }
+  .moves-left { font-size: 20px; }
+  .score-display { font-size: 28px; }
+  .combo-display { font-size: 12px; }
+
+  /* Buttons full width, larger tap targets */
+  .btn, .btn-start, .shop-buy-btn, .options-btn {
+    width: 100%;
+    padding: 14px 0;
+    font-size: 16px;
+  }
+
+  /* Consumables & boosters stack horizontally */
+  .consumables-panel, .available-boosters-panel, .boosters-panel {
+    padding: 10px;
+    margin: 8px 0;
+  }
+  .consumable-btn, .booster-btn {
+    font-size: 12px;
+    padding: 10px;
+  }
+
+  /* Shop screen padding */
+  .shop-container {
+    padding: 20px 10px;
+  }
+  .shop-items {
+    grid-template-columns: repeat(auto-fill, minmax(45%, 1fr));
+    gap: 10px;
+  }
+  .shop-item {
+    padding: 15px;
+  }
+  .shop-item-name { font-size: 16px; }
+  .shop-item-desc { font-size: 12px; }
+  .shop-item-price { font-size: 14px; }
+
+  /* Gem selection modal */
+  .gem-selection-modal {
+    width: 90vw;
+    padding: 20px;
+  }
+  .gem-type-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+
+  /* Options menu */
+  .options-container {
+    padding: 20px 10px;
+  }
+  .options-section {
+    padding: 15px;
+  }
+  .cosmetic-select, .volume-slider {
+    min-width: 120px;
+  }
+
+  /* Audio toggle stays accessible */
+  .ingame-audio-toggle {
+    width: 45px;
+    height: 45px;
+    top: 10px;
+    left: 10px;
+    font-size: 18px;
+  }
+}
+
+/* Smaller phones */
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+  .title {
+    font-size: 24px;
+  }
+  .start-title {
+    font-size: 48px;
+  }
+  .start-subtitle {
+    font-size: 18px;
+    margin-bottom: 30px;
+  }
+  .rules-text {
+    font-size: 12px;
+  }
+  .game-rules {
+    margin: 20px 10px;
+    padding: 20px;
+  }
+  .floor-info, .moves-left {
+    font-size: 18px;
+  }
+  .stat-item {
+    font-size: 11px;
+  }
+}
+
 </style>
 </head>
 <body>
