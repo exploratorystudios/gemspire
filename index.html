@@ -1823,7 +1823,7 @@ transition: transform 0.6s ease-out;
     
     /* Game board - slightly smaller gems */
     .game-board {
-		display: grid;
+        display: grid;
         grid-template-columns: repeat(7, 1fr);
         grid-template-rows: repeat(7, 1fr);
         width: calc(100vw - 20px);
@@ -1994,6 +1994,63 @@ transition: transform 0.6s ease-out;
         top: -3px;
         right: -3px;
     }
+}
+
+/* Portrait two-column override: board left, UI right */
+@media screen and (orientation: portrait) and (max-width: 768px) {
+  .game-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    height: 100vh;
+    padding: 5px;
+    gap: 5px;
+  }
+  
+  .board-wrapper {
+    order: 1;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .board-wrapper .title {
+    font-size: 18px;
+    margin: 0;
+  }
+  .board-wrapper .game-board {
+    width: min(45vw, 320px);
+    height: min(45vw, 320px);
+    max-width: none;
+    max-height: none;
+  }
+  
+  .controls-sidebar {
+    order: 2;
+    flex: 1;
+    max-width: calc(100% - min(45vw, 320px) - 10px);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 0 5px;
+    gap: 10px;
+  }
+  
+  .controls-sidebar .stats-panel {
+    order: 1;
+    width: 100%;
+  }
+  .controls-sidebar .active-relics-container {
+    order: 2;
+    width: 100%;
+  }
+  .controls-sidebar .consumables-panel,
+  .controls-sidebar .boosters-panel,
+  .controls-sidebar .available-boosters-panel {
+    order: 3;
+    width: 100%;
+  }
 }
 
 /* Small screens */
@@ -2215,6 +2272,7 @@ html {
         }
     }
 }
+
 
 </style>
 </head>
