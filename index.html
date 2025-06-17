@@ -3032,29 +3032,29 @@ transition: transform 0.6s ease-out;
 				}, 400);
 			}
 
-            showCrystalGain(amount) {
-                const crystalDisplay = document.getElementById('crystalAmount');
-                if (!crystalDisplay) return;
+			showCrystalGain(amount) {
+				const crystalDisplay = document.getElementById('crystalAmount');
+				if (!crystalDisplay) return;
 
-                const crystalGain = document.createElement('div');
-                crystalGain.className = 'crystal-gain';
-                crystalGain.textContent = `+${amount} 💎`;
-                
-                const rect = crystalDisplay.getBoundingClientRect();
-                crystalGain.style.left = rect.left + 'px';
-                crystalGain.style.top = rect.top + 'px';
-                
-                document.body.appendChild(crystalGain);
-                
-                crystalGain.offsetHeight;
-                crystalGain.classList.add('animate');
-                
-                setTimeout(() => {
-                    if (crystalGain.parentNode) {
-                        crystalGain.parentNode.removeChild(crystalGain);
-                    }
-                }, 2000);
-            }
+				const crystalGain = document.createElement('div');
+				crystalGain.className = 'crystal-gain';
+				crystalGain.textContent = `+${formatNumber(amount)} 💎`;
+				
+				const rect = crystalDisplay.getBoundingClientRect();
+				crystalGain.style.left = rect.left + 'px';
+				crystalGain.style.top = rect.top + 'px';
+				
+				document.body.appendChild(crystalGain);
+				
+				crystalGain.offsetHeight;
+				crystalGain.classList.add('animate');
+				
+				setTimeout(() => {
+					if (crystalGain.parentNode) {
+						crystalGain.parentNode.removeChild(crystalGain);
+					}
+				}, 2000);
+			}
 
 			initializeShop() {
 				this.shopItems = {
