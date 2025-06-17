@@ -4427,7 +4427,7 @@ transition: transform 0.6s ease-out;
                 this.updateBoostersDisplay();
                 
 				this.updateRelicsDisplay();
-				
+
                 // Start background music and show audio toggle
                 this.playBackgroundMusic('bg1');
                 this.showIngameAudioToggle();
@@ -4951,10 +4951,25 @@ transition: transform 0.6s ease-out;
             }
 
 			updateGemElement(element, gem) {
+			  // Store current opacity before clearing styles (for animations)
+			  const currentOpacity = element.style.opacity;
+
+			  // CRITICAL: Reset problematic inline styles but preserve opacity if it's part of an animation
+			  element.style.transform = '';
+			  element.style.transition = '';
+			  element.style.animation = '';
+			  element.style.zIndex = '';
+			  element.style.pointerEvents = '';
+			  
+			  // Only reset opacity if it's not currently being animated (empty or '0')
+			  if (!currentOpacity || currentOpacity === '0' || currentOpacity === '') {
+				element.style.opacity = '1';
+			  }
+
 			  // remember if neon was on
 			  const neonOn = element.classList.contains('neon-theme');
 
-			  // strip out any old type classes and re-add just “gem” + the type
+			  // strip out any old type classes and re-add just "gem" + the type
 			  element.classList.remove(...this.gemTypes);
 			  element.classList.add('gem', gem.type);
 
@@ -4966,6 +4981,9 @@ transition: transform 0.6s ease-out;
 			  if (gem.isThunderbolt) element.classList.add('thunderbolt');
 
 			  element.textContent = gem.symbol;
+			  
+			  // CRITICAL: Update the gemId dataset for proper tracking
+			  element.dataset.gemId = gem.id;
 
 			  // update the little value-display
 			  let vd = element.querySelector('.gem-value-display');
@@ -5508,62 +5526,82 @@ transition: transform 0.6s ease-out;
                 return matches;
             }
 
-            async dropGems() {
-                for (let col = 0; col < 7; col++) {
-                    let dropDistance = 0;
-                    
-                    for (let row = 6; row >= 0; row--) {
-                        if (this.board[row][col] === null) {
-                            dropDistance++;
-                        } else if (dropDistance > 0) {
-                            this.board[row + dropDistance][col] = this.board[row][col];
-                            this.board[row][col] = null;
-                            
-                            const elem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-                            const newElem = document.querySelector(`[data-row="${row + dropDistance}"][data-col="${col}"]`);
-                            
-                            this.updateGemElement(newElem, this.board[row + dropDistance][col]);
-                            newElem.style.transform = `translateY(-${dropDistance * 54}px)`;
-                            newElem.style.opacity = '1';
-                            
-                            elem.style.opacity = '0';
-                            
-                            setTimeout(() => {
-                                newElem.style.transform = '';
-                                newElem.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                            }, 50);
-                        }
-                    }
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 200));
-            }
+			async dropGems() {
+				for (let col = 0; col < 7; col++) {
+					let dropDistance = 0;
+					
+					for (let row = 6; row >= 0; row--) {
+						if (this.board[row][col] === null) {
+							dropDistance++;
+							
+						} else if (dropDistance > 0) {
+							// …your existing model update…
+							this.board[row + dropDistance][col] = this.board[row][col];
+							this.board[row][col] = null;
+							
+							const elem    = document.querySelector(
+							  `[data-row="${row}"][data-col="${col}"]`
+							);
+							const newElem = document.querySelector(
+							  `[data-row="${row + dropDistance}"][data-col="${col}"]`
+							);
+							
+							// ← INSERT HERE: keep the dataset in sync
+							newElem.dataset.row = row + dropDistance;
+							newElem.dataset.col = col;
+							
+							// …then your existing visuals…
+							this.updateGemElement(newElem, this.board[row + dropDistance][col]);
+							newElem.style.transform = `translateY(-${dropDistance * 54}px)`;
+							newElem.style.opacity   = '1';
+							
+							elem.style.opacity = '0';
+							
+							setTimeout(() => {
+								newElem.style.transform  = '';
+								newElem.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+							}, 50);
+						}
+					}
+				}
+				// ← you probably already await here…
+				await new Promise(resolve => setTimeout(resolve, 200));
+			}
 
-            async fillEmptySpaces() {
-                for (let col = 0; col < 7; col++) {
-                    for (let row = 0; row < 7; row++) {
-                        if (this.board[row][col] === null) {
-                            const gem = this.createRandomGem();
-                            this.board[row][col] = gem;
-                            
-                            const elem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-                            if (elem) {
-                                this.updateGemElement(elem, gem);
-                                elem.style.opacity = '0';
-                                elem.style.transform = 'translateY(-100px)';
-                                
-                                setTimeout(() => {
-                                    elem.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.2s ease';
-                                    elem.style.transform = '';
-                                    elem.style.opacity = '1';
-                                }, col * 50);
-                            }
-                        }
-                    }
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 250));
-            }
+			async fillEmptySpaces() {
+				for (let col = 0; col < 7; col++) {
+					for (let row = 0; row < 7; row++) {
+						if (this.board[row][col] === null) {
+							// …your existing model update…
+							const gem = this.createRandomGem();
+							this.board[row][col] = gem;
+							
+							const elem = document.querySelector(
+							  `[data-row="${row}"][data-col="${col}"]`
+							);
+							if (elem) {
+								// ← INSERT HERE: teach the element its new coords
+								elem.dataset.row = row;
+								elem.dataset.col = col;
+
+								// …then your existing visuals…
+								this.updateGemElement(elem, gem);
+								elem.style.opacity   = '0';
+								elem.style.transform = 'translateY(-100px)';
+								
+								setTimeout(() => {
+									elem.style.transition = 
+									  'transform 0.25s ease, opacity 0.2s ease';
+									elem.style.transform  = '';
+									elem.style.opacity    = '1';
+								}, col * 50);
+							}
+						}
+					}
+				}
+
+				await new Promise(resolve => setTimeout(resolve, 250));
+			}
 
             async processVoidHunger(matches) {
                 const voidMatches = matches.filter(match => {
@@ -5767,59 +5805,132 @@ transition: transform 0.6s ease-out;
             }
 
 			async animateJesterGambit(rows) {
-			  // 1) Gather coordinates
-			  const toExplode = [];
+			  console.log('🎭 Jester\'s Gambit triggered for rows:', rows);
+			  this.showComboIndicator('🎭 JESTER\'S GAMBIT!');
+			  this.playSound('explode');
+
+			  // 1) Gather score & positions
+			  let jesterScore = 0;
+			  const gemsToRemove = [];
 			  rows.forEach(row => {
 				for (let col = 0; col < 7; col++) {
-				  toExplode.push({ row, col });
+				  const gem = this.board[row][col];
+				  if (gem) {
+					jesterScore += gem.value;
+					gemsToRemove.push({ row, col });
+				  }
 				}
 			  });
 
-			  // 2) Compute score upfront
-			  let jesterScore = toExplode.reduce((sum, {row, col}) => {
-				const gem = this.board[row][col];
-				return sum + (gem ? gem.value : 0);
-			  }, 0);
+			  // 2) Prepare board and overlay
+			  const board     = document.getElementById('gameBoard');
+			  const overlay   = board.parentElement;         // positioned relative
+			  const tileSize  = board.getBoundingClientRect().width / 7;
 
-			  this.showComboIndicator('🎭 JESTER’S GAMBIT!');
-			  this.playSound('explode');
+			  // 3) Create and position ghosts
+			  const ghosts = gemsToRemove.map(({row, col}) => {
+				const orig = board.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+				if (!orig) return null;
 
-			  // 3) Animate the fall, but _don't_ touch the model yet
-			  await Promise.all(toExplode.map(({row, col}, idx) => {
-				return new Promise(resolve => {
-				  const el = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-				  if (!el) return resolve();  
+				// clone
+				const ghost = orig.cloneNode(true);
+				const rect  = orig.getBoundingClientRect();
+				const containerRect = overlay.getBoundingClientRect();
 
-				  // stagger by column so it waves
-				  setTimeout(() => {
-					el.classList.add('jester-fall');
-					el.addEventListener('animationend', () => {
-					  // hide it now—but still keep its board entry for moment
-					  el.style.opacity = '0';
-					  resolve();
-					}, { once: true });
-				  }, col * 80);
+				// absolutely position & size it
+				Object.assign(ghost.style, {
+				  position:     'absolute',
+				  left:         `${rect.left - containerRect.left}px`,
+				  top:          `${rect.top  - containerRect.top}px`,
+				  width:        `${rect.width}px`,
+				  height:       `${rect.height}px`,
+				  margin:       0,
+				  pointerEvents:'none',
+				  zIndex:       1000,
+				  visibility:   'visible',
 				});
-			  }));
 
-			  // 4) Now actually clear out the model
-			  toExplode.forEach(({row, col}) => {
-				this.board[row][col] = null;
+				overlay.appendChild(ghost);
+
+				// fade out the real one (but leave its container intact)
+				orig.style.transition    = 'opacity 0.15s ease';
+				orig.style.opacity       = '0';
+				orig.style.pointerEvents = 'none';
+
+				return { ghost, orig, col };
+			  }).filter(x => x);
+
+			  // 4) Animate them flying off
+			  const animations = ghosts.map(({ghost, orig, col}) => {
+				return new Promise(resolve => {
+				  setTimeout(() => {
+					const anim = ghost.animate([
+					  { transform: 'rotateZ(0deg) translateY(0)',        opacity: 1 },
+					  { transform: 'rotateZ(180deg) translateY(50vh)',    opacity: 0.7 },
+					  { transform: 'rotateZ(360deg) translateY(100vh)',   opacity: 0   }
+					], {
+					  duration: 800,
+					  easing:   'ease-in-out',
+					  fill:     'forwards'
+					});
+
+					anim.onfinish = () => {
+					  ghost.remove();
+					  resolve();
+					};
+				  }, col * 60);  // stagger by column
+				});
 			  });
 
-			  // 5) Award score
+			  await Promise.all(animations);
+			  console.log('All jester “ghost” animations completed');
+
+			  // <<< HERE: animate the faded-out originals away (scale+fade) >>>
+			  rows.forEach(r => {
+				board
+				  .querySelectorAll(`.gem[data-row="${r}"]`)
+				  .forEach(el => {
+					el.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+					el.style.transform  = 'scale(0)';
+					el.style.opacity    = '0';
+				  });
+			  });
+
+			  // give that little scale/fade a moment
+			  await new Promise(r => setTimeout(r, 300));
+
+			  // 5) Clear those rows in the model
+			  rows.forEach(row => {
+				for (let col = 0; col < 7; col++) {
+				  this.board[row][col] = null;
+				}
+			  });
+
+			  // 6) Award the score
 			  const finalJesterScore = Math.floor(
-				jesterScore
-				* this.multiplier
-				* this.baseMultiplier
-				* (this.currentCombo || 1)
+				jesterScore * this.multiplier * this.baseMultiplier * (this.currentCombo || 1)
 			  );
 			  this.score += finalJesterScore;
 			  this.animateScoreIncrease(finalJesterScore);
+			  console.log(`Jester scored ${finalJesterScore} points`);
 
-			  // 6) Let your normal cascade logic take over
+			  // 7) Small pause, then drop & fill
+			  await new Promise(r => setTimeout(r, 200));
 			  await this.dropGems();
 			  await this.fillEmptySpaces();
+
+			  // 8) Wait, then snap grid back
+			  await new Promise(r => setTimeout(r, 600));
+			  document.querySelectorAll('.gem').forEach(el => {
+				const r = parseInt(el.dataset.row, 10);
+				const c = parseInt(el.dataset.col, 10);
+				if (!isNaN(r) && !isNaN(c)) {
+				  el.style.gridRowStart    = r + 1;
+				  el.style.gridColumnStart = c + 1;
+				}
+			  });
+
+			  console.log('🎭 Jester\'s Gambit complete');
 			}
 			
             restartGame() {
