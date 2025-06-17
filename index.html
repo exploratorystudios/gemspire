@@ -2056,6 +2056,29 @@ html, body, .game-container {
   }
 }
 
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .game-container {
+    flex-direction: column;
+    /* stop centering children so they span the full width */
+    align-items: stretch !important;
+    /* kill any gap between flex items */
+    gap: 0 !important;
+    /* clear any padding/margin on the wrapper if you want flush to edges */
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .game-board-container,
+  .stats-panel {
+    /* make them both exactly as wide as the container */
+    width: 100% !important;
+    max-width: 100% !important;
+    /* remove any margins/padding that snuck back in */
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
 </style>
 </head>
 <body>
