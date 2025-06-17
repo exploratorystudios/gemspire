@@ -9,19 +9,36 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
 
+/* ─────────────────────────────────────────────────────────
+ HIDE GAME UI ON AUDIO‐PERMISSION & START SCREENS
+ ───────────────────────────────────────────────────────── */
+/* when the audio‐permission or start screen is visible,
+	make sure the game elements stay hidden underneath */
+.audio-permission-screen ~ #gameContainer,
+.start-screen            ~ #gameContainer,
+.audio-permission-screen ~ #gameContainer .game-board-container,
+.audio-permission-screen ~ #gameContainer .ui-panel,
+.start-screen            ~ #gameContainer .game-board-container,
+.start-screen            ~ #gameContainer .ui-panel {
+	display: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+ Global reset
+ ───────────────────────────────────────────────────────── */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
 }
 
 body {
-    font-family: 'Orbitron', monospace;
-    background: linear-gradient(135deg, #1e1e2e 0%, #2d1b3d 50%, #3e2723 100%);
-    color: #e0e0e0;
-    overflow: hidden;
-    height: 100vh;
-    position: relative;
+	font-family: 'Orbitron', monospace;
+	background: linear-gradient(135deg, #1e1e2e 0%, #2d1b3d 50%, #3e2723 100%);
+	color: #e0e0e0;
+	overflow: hidden;
+	height: 100vh;
+	position: relative;
 }
 
 .bg-animation {
@@ -1997,21 +2014,27 @@ html, body, .game-container {
     display: flex !important;
     flex-direction: column !important;
     align-items: center;
-    padding: 0;
-    overflow-x: hidden;
+    padding: 5px;
+    gap: 0 !important;
   }
 
-  /* 1) Board first */
   .game-board-container {
     order: 1;
+    width: calc(100vw - 20px);
+    max-width: 400px;
+    height: auto;
+    margin: 0 auto 0 !important;
+    padding: 0;
+    box-sizing: border-box;
   }
 
   /* 2) Stats next */
   .stats-panel {
     order: 2;
-    width: 100%;
+    margin: 0 !important;
+    width: 100vw !important;
+    padding: 5px 0 !important;
     box-sizing: border-box;
-    margin: 8px 0;
   }
 
   /* 3) Then mobile relics */
@@ -5042,31 +5065,32 @@ html, body, .game-container {
             }
 
 			selectRelic(relic) {
-			   this.playSound('relic');
-			   if (relic.type !== 'continue') {
-				    this.relics.push(relic);
-				    relic.effect();
-				    const el = document.getElementById('relicsList').lastElementChild;
-				    if (el) {
-		 			    const map = {
-		 				    jester_gambit:    'jester-effect',
-		 				    quantum_mirror:   'quantum-mirror-effect',
-		 		 		    entropy_engine:   'entropy-engine-effect'
-		 			    };
-		 			    el.classList.add(map[relic.type]);
-		 		    }
-			    }
-			    this.moves = 4 + (this.bonusMoves || 0);
-			    document.getElementById('relicSelectionScreen').style.display = 'none';
-			    this.createBoard();
+				this.playSound('relic');
+
+				// add the new relic to your array (unless it was “continue”)
+				if (relic.type !== 'continue') {
+					this.relics.push(relic);
+				}
+
+				// reset moves based on any bonus-moves relics
+				this.moves = 4 + (this.bonusMoves || 0);
+
+				// hide the relic-choice overlay
+				document.getElementById('relicSelectionScreen').style.display = 'none';
+
+				// rebuild the board for the next floor
+				this.createBoard();
+
+				// reposition gems in the DOM grid
 				document.querySelectorAll('.gem').forEach(el => {
-				  el.style.gridRowStart    = +el.dataset.row + 1;
-				  el.style.gridColumnStart = +el.dataset.col + 1;
+					el.style.gridRowStart    = +el.dataset.row + 1;
+					el.style.gridColumnStart = +el.dataset.col + 1;
 				});
 
-			    this.updateUI();
-			    this.updateRelicsDisplay();
-			    this.initializeScoreDisplay();
+				// refresh all of the side-panel displays
+				this.updateUI();
+				this.updateRelicsDisplay();
+				this.initializeScoreDisplay();
 			}
 
 			updateRelicsDisplay() {
