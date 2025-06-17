@@ -4426,6 +4426,8 @@ transition: transform 0.6s ease-out;
                 this.updateConsumablesDisplay();
                 this.updateBoostersDisplay();
                 
+				this.updateRelicsDisplay();
+				
                 // Start background music and show audio toggle
                 this.playBackgroundMusic('bg1');
                 this.showIngameAudioToggle();
@@ -5089,35 +5091,47 @@ transition: transform 0.6s ease-out;
 			}
 
 			updateRelicsDisplay() {
-				// Grab both desktop & mobile grids
-				const lists = [
-					document.getElementById('relicsListDesktop'),
-					document.getElementById('relicsListMobile')
-				];
+			  // Grab both desktop & mobile grids
+			  const lists = [
+				document.getElementById('relicsListDesktop'),
+				document.getElementById('relicsListMobile')
+			  ];
 
-				// Clear and repopulate each
-				lists.forEach(list => {
-					if (!list) return;
-					list.innerHTML = '';
-					this.relics.forEach(r => {
-						const d = document.createElement('div');
-						d.className = 'relic';
-						d.innerHTML = `
-							<div class="relic-name">${r.name}</div>
-							<div class="relic-desc">${r.desc}</div>
-						`;
-						list.appendChild(d);
-					});
-				});
+			  // For each container, clear and repopulate
+			  lists.forEach(list => {
+				if (!list) return;
+				list.innerHTML = '';
 
-				// Toggle "two-rows" class on both containers if >3 relics
-				document.querySelectorAll('.active-relics-container').forEach(container => {
-					if (this.relics.length > 3) {
-						container.classList.add('two-rows');
-					} else {
-						container.classList.remove('two-rows');
-					}
-				});
+				if (this.relics.length === 0) {
+				  // Show Starter Gem when no relics
+				  list.innerHTML = `
+					<div class="relic">
+					  <div class="relic-name">Starter Gem</div>
+					  <div class="relic-desc">Basic gem matching power</div>
+					</div>
+				  `;
+				} else {
+				  // Otherwise, list each owned relic
+				  this.relics.forEach(r => {
+					const d = document.createElement('div');
+					d.className = 'relic';
+					d.innerHTML = `
+					  <div class="relic-name">${r.name}</div>
+					  <div class="relic-desc">${r.desc}</div>
+					`;
+					list.appendChild(d);
+				  });
+				}
+			  });
+
+			  // Toggle "two-rows" class on both containers if >3 relics
+			  document.querySelectorAll('.active-relics-container').forEach(container => {
+				if (this.relics.length > 3) {
+				  container.classList.add('two-rows');
+				} else {
+				  container.classList.remove('two-rows');
+				}
+			  });
 			}
 
             showComboIndicator(text) {
