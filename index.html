@@ -2102,73 +2102,88 @@ html {
         </div>
     </div>
 
-	<div class="game-container" id="gameContainer" style="display: none;">
-	  <!-- LEFT: board + combo -->
-	  <div class="board-wrapper">
-		<h1 class="title">⚡ GEMSPIRE ⚡</h1>
-		<div class="game-board-container">
-		  <div class="game-board" id="gameBoard"></div>
+    <div class="game-container" id="gameContainer" style="display: none;">
+        <div>
+            <h1 class="title">⚡ GEMSPIRE ⚡</h1>
+            <div class="game-board-container">
+                <div class="game-board" id="gameBoard"></div>
+            </div>
+            <div class="combo-indicator" id="comboIndicator"></div>
+
+			<div class="active-relics-container">
+			  <h4>Active Relics</h4>
+			  <div class="active-relics-grid" id="relicsList">
+				<!-- relic items go here -->
+			  </div>
+			</div>
+        </div>
+
+		<div class="game-container" id="gameContainer" style="display: none;">
+		  <!-- LEFT: board + combo -->
+		  <div class="board-wrapper">
+			<h1 class="title">⚡ GEMSPIRE ⚡</h1>
+			<div class="game-board-container">
+			  <div class="game-board" id="gameBoard"></div>
+			</div>
+			<div class="combo-indicator" id="comboIndicator"></div>
+		  </div>
+
+		  <!-- RIGHT: stats, relics, consumables, boosters -->
+		  <div class="controls-sidebar ui-panel">
+			<!-- 1) Stats panel -->
+			<div class="stats-panel">
+			  <div class="floor-info">Floor <span id="currentFloor">1</span></div>
+			  <div class="moves-left">Moves: <span id="movesLeft">4</span></div>
+			  <div class="progress-bar">
+				<div class="progress-fill" id="progressFill" style="width: 0%"></div>
+			  </div>
+
+			  <div class="score-display" id="scoreDisplay">0</div>
+			  <div class="combo-display" id="comboDisplay">Combo x1</div>
+
+			  <div class="crystal-display">
+				<span class="crystal-icon">💎</span>
+				<span class="crystal-amount" id="crystalAmount">0</span>
+			  </div>
+
+			  <div class="stat-item">
+				<span>Target:</span>
+				<span class="stat-value" id="targetScore">800</span>
+			  </div>
+			  <div class="stat-item">
+				<span>Multiplier:</span>
+				<span class="stat-value" id="multiplier">1.0x</span>
+			  </div>
+
+			  <button class="btn options-btn"
+					  onclick="openOptionsMenu()"
+					  style="width:100%; margin:10px 0; font-size:14px;">
+				⚙️ Options
+			  </button>
+
+			  <div class="consumables-panel" id="consumablesPanel" style="display:none;">
+				<h4 style="color:#8b5cf6; margin-bottom:10px; font-size:14px;">
+				  💫 Consumables
+				</h4>
+				<div id="consumableButtons"></div>
+			  </div>
+
+			  <div class="boosters-panel" id="boostersPanel" style="display:none;">
+				<h4 style="color:#10b981; margin-bottom:10px; font-size:14px;">
+				  ⚡ Active Boosters
+				</h4>
+				<div id="activeBoostersList"></div>
+			  </div>
+
+			  <div class="available-boosters-panel" id="availableBoostersPanel" style="display:none;">
+				<h4 style="color:#8b5cf6; margin-bottom:10px; font-size:14px;">
+				  💫 Available Boosters
+				</h4>
+				<div id="availableBoosterButtons"></div>
+			  </div>
+			</div>
+		  </div>
 		</div>
-		<div class="combo-indicator" id="comboIndicator"></div>
-	  </div>
-
-	  <!-- RIGHT: stats, relics, consumables, boosters -->
-	  <div class="controls-sidebar ui-panel">
-		<!-- 1) Stats panel -->
-		<div class="stats-panel">
-		  <div class="floor-info">Floor <span id="currentFloor">1</span></div>
-		  <div class="moves-left">Moves: <span id="movesLeft">4</span></div>
-		  <div class="progress-bar">
-			<div class="progress-fill" id="progressFill" style="width: 0%"></div>
-		  </div>
-
-		  <div class="score-display" id="scoreDisplay">0</div>
-		  <div class="combo-display" id="comboDisplay">Combo x1</div>
-
-		  <div class="crystal-display">
-			<span class="crystal-icon">💎</span>
-			<span class="crystal-amount" id="crystalAmount">0</span>
-		  </div>
-
-		  <div class="stat-item">
-			<span>Target:</span>
-			<span class="stat-value" id="targetScore">800</span>
-		  </div>
-		  <div class="stat-item">
-			<span>Multiplier:</span>
-			<span class="stat-value" id="multiplier">1.0x</span>
-		  </div>
-
-		  <button class="btn options-btn"
-				  onclick="openOptionsMenu()"
-				  style="width:100%; margin:10px 0; font-size:14px;">
-			⚙️ Options
-		  </button>
-
-		  <div class="consumables-panel" id="consumablesPanel" style="display:none;">
-			<h4 style="color:#8b5cf6; margin-bottom:10px; font-size:14px;">
-			  💫 Consumables
-			</h4>
-			<div id="consumableButtons"></div>
-		  </div>
-
-		  <div class="boosters-panel" id="boostersPanel" style="display:none;">
-			<h4 style="color:#10b981; margin-bottom:10px; font-size:14px;">
-			  ⚡ Active Boosters
-			</h4>
-			<div id="activeBoostersList"></div>
-		  </div>
-
-		  <div class="available-boosters-panel" id="availableBoostersPanel" style="display:none;">
-			<h4 style="color:#8b5cf6; margin-bottom:10px; font-size:14px;">
-			  💫 Available Boosters
-			</h4>
-			<div id="availableBoosterButtons"></div>
-		  </div>
-		</div>
-	  </div>
-	</div>
-
     <div class="game-over" id="relicSelectionScreen">
         <h2>Choose Your Relic</h2>
         <p>Select one upgrade to help you on your journey:</p>
