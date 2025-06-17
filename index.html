@@ -1983,22 +1983,6 @@ html, body, .game-container {
   }
 }
 
-/* ─── Fix overflow & fluid 7×7 board ─── */
-.game-board-container {
-  width: 100%;
-  max-width: 100%;
-  aspect-ratio: 1/1;
-  display: grid;
-  grid-template-columns: repeat(7,1fr);
-  grid-template-rows: repeat(7,1fr);
-  gap: 2px;
-  margin: 0 auto;
-}
-.game-board .gem {
-  width: 100%;
-  height: 100%;
-}
-
 /* ─── Desktop & landscape: show desktop relics, hide mobile relics ─── */
 .relics-desktop { display: block; }
 .relics-mobile  { display: none; }
