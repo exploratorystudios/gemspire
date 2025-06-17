@@ -1859,9 +1859,16 @@ transition: transform 0.6s ease-out;
     display: none;
   }
   .active-relics-container {
-    flex: 1 1 auto;           /* grow to fill sidebar */
-    overflow-y: auto;         /* scroll internally if too tall */
+    flex: 1 1 auto;           /* take all remaining sidebar height */
+    display: flex;
+    flex-direction: row;      /* LINE them up horizontally */
+    flex-wrap: nowrap;        /* one single row */
+    align-items: center;
+    overflow-x: auto;         /* horizontal scroll if too many */
+    overflow-y: hidden;
     padding: 5px 0;
+    width: 100%;
+    box-sizing: border-box;
   }
   .relics-mobile,
   .ui-panel .active-relics-container {
@@ -1872,7 +1879,13 @@ transition: transform 0.6s ease-out;
     padding: 5px 0;
     box-sizing: border-box;
   }
-
+  /* Optional: make each relic a nice square and prevent shrinking */
+  .active-relics-container .relic {
+    flex: 0 0 auto;
+    width: 80px;              /* or whatever size you need */
+    aspect-ratio: 1 / 1;
+    margin-right: 8px;
+  }
   /*   2c) Consumables & boosters */
   .ui-panel .consumables-panel,
   .ui-panel .boosters-panel,
