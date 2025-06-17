@@ -1983,6 +1983,72 @@ html, body, .game-container {
   }
 }
 
+/* ─── Fix overflow & fluid 7×7 board ─── */
+.game-board-container {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 1/1;
+  display: grid;
+  grid-template-columns: repeat(7,1fr);
+  grid-template-rows: repeat(7,1fr);
+  gap: 2px;
+  margin: 0 auto;
+}
+.game-board .gem {
+  width: 100%;
+  height: 100%;
+}
+
+/* ─── Desktop & landscape: show desktop relics, hide mobile relics ─── */
+.relics-desktop { display: block; }
+.relics-mobile  { display: none; }
+
+/* ─── Mobile-portrait only ─── */
+@media screen and (max-width: 768px) and (orientation: portrait) {
+
+  /* Stack into a single column */
+  .game-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* 1) Board first */
+  .game-board-container {
+    order: 1;
+  }
+
+  /* 2) Stats next */
+  .stats-panel {
+    order: 2;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 8px 0;
+  }
+
+  /* 3) Then mobile relics */
+  .relics-desktop { display: none; }
+  .relics-mobile  {
+    display: block;
+    order: 3;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 8px 0;
+  }
+
+  /* 4) Then consumables/boosters */
+  .consumables-panel,
+  .boosters-panel,
+  .available-boosters-panel {
+    order: 4;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 8px 0;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2030,10 +2096,10 @@ html, body, .game-container {
             </div>
             <div class="combo-indicator" id="comboIndicator"></div>
 
-			<div class="active-relics-container">
+			<div class="active-relics-container relics-desktop">
 			  <h4>Active Relics</h4>
-			  <div class="active-relics-grid" id="relicsList">
-				<!-- relic items go here -->
+			  <div class="active-relics-grid" id="relicsListDesktop">
+				<!-- relic items -->
 			  </div>
 			</div>
         </div>
@@ -2090,7 +2156,14 @@ html, body, .game-container {
 				</div>
 
 			</div>
-            
+
+			<div class="active-relics-container relics-mobile">
+			  <h4>Active Relics</h4>
+			  <div class="active-relics-grid" id="relicsListMobile">
+				<!-- same relic items -->
+			  </div>
+			</div>
+
         </div>
     </div>
 
@@ -5011,7 +5084,20 @@ html, body, .game-container {
 			}
 
 			updateRelicsDisplay() {
-			  const relicsList = document.getElementById('relicsList');
+			  const desktop = document.getElementById('relicsListDesktop');
+			  const mobile  = document.getElementById('relicsListMobile');
+			  [desktop, mobile].forEach(list => {
+				list.innerHTML = '';
+				game.relics.forEach(r => {
+				  const d = document.createElement('div');
+				  d.className = 'relic';
+				  d.innerHTML = `
+					<div class="relic-name">${r.name}</div>
+					<div class="relic-desc">${r.desc}</div>
+				  `;
+				  list.appendChild(d);
+				});
+			  });
 			  const container  = document.querySelector('.active-relics-container');
 
 			  // clear out old relics
