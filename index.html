@@ -1918,6 +1918,71 @@ html, body, .game-container {
   }
 }
 
+/* ─── Mobile-Portrait Only: reorder and clamp widths ─── */
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  /* make the container a column */
+  .game-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    overflow-x: hidden;
+  }
+
+  /* 1) Game board comes first, full-width square */
+  .game-board-container {
+    order: 1;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    aspect-ratio: 1 / 1;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  .game-board-container .game-board {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    gap: 2px;
+  }
+  .game-board .gem {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* 2) Stats panel below board */
+  .stats-panel {
+    order: 2;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin: 5px 0;
+    box-sizing: border-box;
+  }
+
+  /* 3) Active Relics next */
+  .active-relics-container {
+    order: 3;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin: 5px 0;
+    box-sizing: border-box;
+  }
+
+  /* 4) Then your other panels (consumables, boosters…) */
+  .consumables-panel,
+  .boosters-panel,
+  .available-boosters-panel {
+    order: 4;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin: 5px 0;
+    box-sizing: border-box;
+  }
+}
+
 </style>
 </head>
 <body>
