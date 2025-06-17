@@ -1787,87 +1787,121 @@ transition: transform 0.6s ease-out;
     color: #fff; 
 }
 
-/* Mobile Responsive CSS for Gemspire */
-
-/* ─── PORTRAIT: Board → Stats → Active Relics → Others ─── */
+/* ──────────────────────────────────────────────────────────────────────────────
+   MOBILE PORTRAIT (≤768px, portrait)
+   Board → Stats → Active Relics → Consumables/Boosters
+   ────────────────────────────────────────────────────────────────────────────── */
 @media screen and (max-width: 768px) and (orientation: portrait) {
+  /* Container: full-width column, no gaps */
   .game-container {
+    display: flex;
     flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+    margin: 0;
+    gap: 0 !important;
     overflow-x: hidden;
-    padding: 5px;              /* tighten up mobile padding */
-	gap: 0 !important;
   }
 
-  /* 1) Board wrapper (use your existing .game-board-container) */
+  /* 1) Game board: full-width square */
   .game-board-container {
     order: 1;
-    width: calc(100vw - 20px);
-    max-width: 400px;
-    height: auto;
-    margin: 0 auto 8px;
-	margin-bottom: 0 !important;
+    width: 100vw;
+    max-width: 100vw;
+    aspect-ratio: 1 / 1;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  .game-board {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    gap: 2px;
+  }
+  .gem {
+    width: 100%;
+    height: 100%;
   }
 
-  /* 2) Sidebar grouping */
+  /* 2) Sidebar “panels” stacked under the board */
   .ui-panel {
     order: 2;
     display: flex;
     flex-direction: column;
-    width: 100%;
-    max-width: none;
     gap: 8px;
-    padding: 0 10px;
+    width: 100vw;
+    max-width: 100vw;
+    padding: 0;
+    margin: 0;
     box-sizing: border-box;
   }
 
-  /* 2a) Stats panel */
+  /*   2a) Stats */
   .ui-panel .stats-panel {
     order: 1;
     width: 100%;
-    margin: 0 !important;
+    margin: 0;
+    padding: 5px 0;
     box-sizing: border-box;
   }
 
-  /* 2b) Active relics */
+  /*   2b) Active relics (mobile version) */
+  .relics-desktop {
+    display: none;
+  }
+  .relics-mobile,
   .ui-panel .active-relics-container {
     order: 2;
+    display: block;
     width: 100%;
-    margin: 0 auto;
+    margin: 0;
+    padding: 5px 0;
     box-sizing: border-box;
   }
 
-  /* 2c) Consumables / Boosters */
+  /*   2c) Consumables & boosters */
   .ui-panel .consumables-panel,
   .ui-panel .boosters-panel,
   .ui-panel .available-boosters-panel {
     order: 3;
     width: 100%;
-    margin: 0 auto;
+    margin: 0;
+    padding: 5px 0;
     box-sizing: border-box;
   }
 }
 
-/* ─── LANDSCAPE: Two-column like desktop ─── */
+/* ──────────────────────────────────────────────────────────────────────────────
+   MOBILE LANDSCAPE (≤768px, landscape)
+   Two-column: Board on left, sidebar on right
+   ────────────────────────────────────────────────────────────────────────────── */
 @media screen and (max-width: 768px) and (orientation: landscape) {
   .game-container {
+    display: flex;
     flex-direction: row;
     justify-content: space-between;
     padding: 5px;
+    gap: 10px;
   }
 
-  /* Left: board */
+  /* Left: game board (~55%) */
   .game-board-container {
     order: 1;
-    flex: 0 0 60%;
-    max-width: 60%;
-    margin-right: 10px;
+    flex: 0 0 55%;
+    max-width: 55%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
 
-  /* Right: sidebar */
+  /* Right: all panels in one sidebar (~45%) */
   .ui-panel {
     order: 2;
     flex: 1;
-    max-width: 40%;
+    max-width: 45%;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -1876,206 +1910,49 @@ transition: transform 0.6s ease-out;
     overflow-y: auto;
   }
 
-  /* Stats on top */
   .ui-panel .stats-panel {
     order: 1;
     width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
-
-  /* Active relics under stats */
   .ui-panel .active-relics-container {
     order: 2;
     width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
-
-  /* Then consumables / boosters */
   .ui-panel .consumables-panel,
   .ui-panel .boosters-panel,
   .ui-panel .available-boosters-panel {
     order: 3;
     width: 100%;
-  }
-}
-
-/* ─── prevent ANY horizontal overflow ─── */
-html, body, .game-container {
-  overflow-x: hidden !important;
-}
-
-/* ─── PORTRAIT: clamp widths to 100vw ─── */
-@media screen and (max-width: 768px) and (orientation: portrait) {
-  .game-board-container,
-  .ui-panel {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    padding: 0 5px !important;
-    box-sizing: border-box !important;
-  }
-  .game-board-container .game-board {
-    width: 100% !important;
-    height: auto !important;
-    max-width: none !important;
-  }
-  .ui-panel .active-relics-container {
-    width: 100% !important;
-    max-width: none !important;
-    padding: 0 5px !important;
-  }
-}
-
-/* ─── LANDSCAPE: adjust flex proportions ─── */
-@media screen and (max-width: 768px) and (orientation: landscape) {
-  .game-board-container {
-    flex: 0 0 55% !important;
-    max-width: 55% !important;
-  }
-  .ui-panel {
-    flex: 0 0 45% !important;
-    max-width: 45% !important;
-  }
-}
-
-/* ─── Mobile-Portrait Only: reorder and clamp widths ─── */
-@media screen and (max-width: 768px) and (orientation: portrait) {
-  /* make the container a column */
-  .game-container {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center;
-    padding: 0;
-    margin: 0;
-    overflow-x: hidden;
-  }
-
-  /* 1) Game board comes first, full-width square */
-  .game-board-container {
-    order: 1;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    aspect-ratio: 1 / 1;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
   }
-  .game-board-container .game-board {
-    width: 100%;
-    height: 100%;
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    grid-template-rows: repeat(7, 1fr);
-    gap: 2px;
-  }
-  .game-board .gem {
-    width: 100%;
-    height: 100%;
-  }
 
-  /* 2) Stats panel below board */
-  .stats-panel {
-    order: 2;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    margin: 5px 0;
-    box-sizing: border-box;
-  }
-
-  /* 3) Active Relics next */
-  .active-relics-container {
-    order: 3;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    margin: 5px 0;
-    box-sizing: border-box;
-  }
-
-  /* 4) Then your other panels (consumables, boosters…) */
-  .consumables-panel,
-  .boosters-panel,
-  .available-boosters-panel {
-    order: 4;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    margin: 5px 0;
-    box-sizing: border-box;
-  }
-}	
-
-/* ─── Desktop & landscape: show desktop relics, hide mobile relics ─── */
-.relics-desktop { display: block; }
-.relics-mobile  { display: none; }
-
-/* ─── Mobile-portrait only ─── */
-@media screen and (max-width: 768px) and (orientation: portrait) {
-
-  /* Stack into a single column */
-  .game-container {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center;
-    padding: 5px;
-    gap: 0 !important;
-  }
-
-  .game-board-container {
-    order: 1;
-    width: calc(100vw - 20px);
-    max-width: 400px;
-    height: auto;
-    margin: 0 auto 0 !important;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  /* 2) Stats next */
-  .stats-panel {
-    order: 2;
-    margin: 0 !important;
-    width: 100vw !important;
-    padding: 5px 0 !important;
-    box-sizing: border-box;
-  }
-
-  /* 3) Then mobile relics */
-  .relics-desktop { display: none; }
-  .relics-mobile  {
+  /* Desktop relics visible again if you slipped in “mobile” relics */
+  .relics-desktop {
     display: block;
-    order: 3;
-    width: 100%;
-    box-sizing: border-box;
-    margin: 8px 0;
   }
-
-  /* 4) Then consumables/boosters */
-  .consumables-panel,
-  .boosters-panel,
-  .available-boosters-panel {
-    order: 4;
-    width: 100%;
-    box-sizing: border-box;
-    margin: 8px 0;
+  .relics-mobile {
+    display: none;
   }
 }
 
-@media screen and (max-width: 768px) and (orientation: portrait) {
-  .game-container {
-    flex-direction: column;
-    /* stop centering children so they span the full width */
-    align-items: stretch !important;
-    /* kill any gap between flex items */
-    gap: 0 !important;
-    /* clear any padding/margin on the wrapper if you want flush to edges */
-    padding: 0 !important;
-    margin: 0 !important;
+/* ──────────────────────────────────────────────────────────────────────────────
+   DESKTOP & ABOVE (≥769px)
+   Default layout; only toggle relic‐sets
+   ────────────────────────────────────────────────────────────────────────────── */
+@media screen and (min-width: 769px) {
+  .relics-desktop {
+    display: block;
   }
-
-  .game-board-container,
-  .stats-panel {
-    /* make them both exactly as wide as the container */
-    width: 100% !important;
-    max-width: 100% !important;
-    /* remove any margins/padding that snuck back in */
-    margin: 0 !important;
-    padding: 0 !important;
+  .relics-mobile {
+    display: none;
   }
 }
 
@@ -5088,71 +4965,64 @@ html, body, .game-container {
 			selectRelic(relic) {
 				this.playSound('relic');
 
-				// add the new relic to your array (unless it was “continue”)
 				if (relic.type !== 'continue') {
+					// 1) Apply the relic's effect immediately
+					if (typeof relic.effect === 'function') {
+						relic.effect();
+					}
+					// 2) Add the relic to the player's active list
 					this.relics.push(relic);
 				}
 
-				// reset moves based on any bonus-moves relics
+				// Reset moves (including any bonusMoves from relics)
 				this.moves = 4 + (this.bonusMoves || 0);
 
-				// hide the relic-choice overlay
+				// Hide the relic-selection overlay
 				document.getElementById('relicSelectionScreen').style.display = 'none';
 
-				// rebuild the board for the next floor
+				// Rebuild the board for the next floor
 				this.createBoard();
-
-				// reposition gems in the DOM grid
 				document.querySelectorAll('.gem').forEach(el => {
 					el.style.gridRowStart    = +el.dataset.row + 1;
 					el.style.gridColumnStart = +el.dataset.col + 1;
 				});
 
-				// refresh all of the side-panel displays
+				// Refresh all side-panel displays
 				this.updateUI();
 				this.updateRelicsDisplay();
 				this.initializeScoreDisplay();
 			}
 
 			updateRelicsDisplay() {
-			  const desktop = document.getElementById('relicsListDesktop');
-			  const mobile  = document.getElementById('relicsListMobile');
-			  [desktop, mobile].forEach(list => {
-				list.innerHTML = '';
-				game.relics.forEach(r => {
-				  const d = document.createElement('div');
-				  d.className = 'relic';
-				  d.innerHTML = `
-					<div class="relic-name">${r.name}</div>
-					<div class="relic-desc">${r.desc}</div>
-				  `;
-				  list.appendChild(d);
+				// Grab both desktop & mobile grids
+				const lists = [
+					document.getElementById('relicsListDesktop'),
+					document.getElementById('relicsListMobile')
+				];
+
+				// Clear and repopulate each
+				lists.forEach(list => {
+					if (!list) return;
+					list.innerHTML = '';
+					this.relics.forEach(r => {
+						const d = document.createElement('div');
+						d.className = 'relic';
+						d.innerHTML = `
+							<div class="relic-name">${r.name}</div>
+							<div class="relic-desc">${r.desc}</div>
+						`;
+						list.appendChild(d);
+					});
 				});
-			  });
-			  const container  = document.querySelector('.active-relics-container');
 
-			  // clear out old relics
-			  relicsList.innerHTML = '';
-
-			  // add each relic as its own <div class="relic">…
-			  this.relics.forEach(relic => {
-				const relicDiv = document.createElement('div');
-				relicDiv.className = 'relic';
-
-				// fill in name + description
-				relicDiv.innerHTML = `
-				  <div class="relic-name">${relic.name}</div>
-				  <div class="relic-desc">${relic.desc}</div>
-				`;
-				relicsList.appendChild(relicDiv);
-			  });
-
-			  // toggle the “two-rows” class if you’ve got more than 3 relics
-			  if (this.relics.length > 3) {
-				container.classList.add('two-rows');
-			  } else {
-				container.classList.remove('two-rows');
-			  }
+				// Toggle "two-rows" class on both containers if >3 relics
+				document.querySelectorAll('.active-relics-container').forEach(container => {
+					if (this.relics.length > 3) {
+						container.classList.add('two-rows');
+					} else {
+						container.classList.remove('two-rows');
+					}
+				});
 			}
 
             showComboIndicator(text) {
