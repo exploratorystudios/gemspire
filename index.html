@@ -2439,7 +2439,10 @@ transition: transform 0.6s ease-out;
 
 				this.consumableUsesThisFloor = 0;
 				this.boosterUsesThisFloor = 0;
-  
+
+				this.baseGemValueBonus = 0;
+				this.minimumGemValue = 0;
+
 				this.scorePopupQueue = [];
 				this.isProcessingPopups = false;
 	
@@ -2502,6 +2505,9 @@ transition: transform 0.6s ease-out;
 				if (this.purchasedUpgrades['reality_breaker']) {
 					this.multiplier = 3.0;
 				}
+				
+				this.applyPermanentUpgrades();
+				console.log('Constructor: Applied permanent upgrades');
 			}
 
 			async shuffleBoard() {
@@ -3764,11 +3770,19 @@ transition: transform 0.6s ease-out;
 
 			applyPermanentUpgrades() {
 				if (this.purchasedUpgrades['gem_mastery']) {
-					this.gemValueBoost += 0.1;
+					// Gem Mastery: +10 base value to all gems
+					this.baseGemValueBonus = (this.baseGemValueBonus || 0) + 10;
 				}
+				
+				if (this.purchasedUpgrades['ascended_mastery']) {
+					// CHANGED: Ascended Mastery now gives +50 bonus instead of minimum 50
+					this.baseGemValueBonus = (this.baseGemValueBonus || 0) + 50;
+				}
+				
 				if (this.purchasedUpgrades['move_master']) {
 					this.bonusMoves = 1;
 				}
+				
 				if (this.purchasedUpgrades['relic_abundance']) {
 					this.grantStartingRelics();
 				}
@@ -4475,7 +4489,6 @@ transition: transform 0.6s ease-out;
             }
             
             initializeGame() {
-                this.applyPermanentUpgrades();
                 this.createBoard();
 				document.querySelectorAll('.gem').forEach(el => {
 				  el.style.gridRowStart    = +el.dataset.row + 1;
@@ -4817,33 +4830,36 @@ transition: transform 0.6s ease-out;
                 return (leftCount + rightCount >= 2) || (upCount + downCount >= 2);
             }
 
-            createRandomGem() {
-                const type = this.gemTypes[Math.floor(Math.random() * this.gemTypes.length)];
-                let baseValue = Math.floor(Math.random() * 25) + 15;
-                
-                if (this.luckyCharm && Math.random() < 0.4) {
-                    baseValue += 25;
-                }
-                
-                baseValue = Math.floor(baseValue * this.gemValueBoost);
-                
-                const gem = {
-                    type: type,
-                    symbol: this.gemSymbols[type],
-                    value: baseValue,
-                    isThunderbolt: false,
-                    strikeCount: 0
-                };
-                
-				return {
-					id: _nextGemId++,           // <-- unique
-					type,
+			createRandomGem() {
+				const type = this.gemTypes[Math.floor(Math.random() * this.gemTypes.length)];
+				
+				// Start with base random value
+				let baseValue = Math.floor(Math.random() * 25) + 15;
+				
+				// Apply base gem value bonus from Gem Mastery and/or Ascended Mastery
+				if (this.baseGemValueBonus) {
+					baseValue += this.baseGemValueBonus;
+				}
+				
+				// Apply lucky charm bonus
+				if (this.luckyCharm && Math.random() < 0.4) {
+					baseValue += 25;
+				}
+				
+				// Apply gem value boost multiplier (from relics, not permanent upgrades)
+				baseValue = Math.floor(baseValue * this.gemValueBoost);
+				
+				const gem = {
+					id: _nextGemId++,
+					type: type,
 					symbol: this.gemSymbols[type],
 					value: baseValue,
 					isThunderbolt: false,
 					strikeCount: 0
 				};
-            }
+				
+				return gem;
+			}
 
 			addEventListeners() {
 				const gameBoard = document.getElementById('gameBoard');
@@ -5998,6 +6014,16 @@ transition: transform 0.6s ease-out;
             restartGame() {
 				console.log('restartGame called - preserving audio state');
 				
+				// Reset permanent upgrade values
+				this.baseGemValueBonus = 0;
+				this.minimumGemValue = 0;
+
+				this.baseGemValueBonus = 0;
+				this.minimumGemValue = 0;
+
+				// Apply permanent upgrades
+				this.applyPermanentUpgrades();
+
 				// Store current audio state BEFORE any changes
 				const wasAudioEnabled = this.audioEnabled;
 				const wasAudioPermissionGiven = this.audioPermissionGiven;
