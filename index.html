@@ -1859,16 +1859,9 @@ transition: transform 0.6s ease-out;
     display: none;
   }
   .active-relics-container {
-    flex: 1 1 auto;           /* take all remaining sidebar height */
-    display: flex;
-    flex-direction: row;      /* LINE them up horizontally */
-    flex-wrap: nowrap;        /* one single row */
-    align-items: center;
-    overflow-x: auto;         /* horizontal scroll if too many */
-    overflow-y: hidden;
+    flex: 1 1 auto;           /* grow to fill sidebar */
+    overflow-y: auto;         /* scroll internally if too tall */
     padding: 5px 0;
-    width: 100%;
-    box-sizing: border-box;
   }
   .relics-mobile,
   .ui-panel .active-relics-container {
@@ -1879,13 +1872,7 @@ transition: transform 0.6s ease-out;
     padding: 5px 0;
     box-sizing: border-box;
   }
-  /* Optional: make each relic a nice square and prevent shrinking */
-  .active-relics-container .relic {
-    flex: 0 0 auto;
-    width: 80px;              /* or whatever size you need */
-    aspect-ratio: 1 / 1;
-    margin-right: 8px;
-  }
+
   /*   2c) Consumables & boosters */
   .ui-panel .consumables-panel,
   .ui-panel .boosters-panel,
@@ -1964,6 +1951,54 @@ transition: transform 0.6s ease-out;
   }
   .relics-mobile {
     display: none;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  /* 1) Make the relic overlay cover the entire viewport */
+  #relicSelectionScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    transform: none;            /* cancel the old 50% centering */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 1rem;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.9); /* match your .game-over bg */
+  }
+
+  /* 2) Header & description stay at top, fixed height */
+  #relicSelectionScreen > h2,
+  #relicSelectionScreen > p {
+    margin: 0;
+    padding: 0.5rem 0;
+    text-align: center;
+    color: #ffd43b;
+    flex: 0 0 auto;
+  }
+
+  /* 3) The relics container becomes a flex-row, scrollable if needed */
+  #relicOptions {
+    flex: 1 1 auto;             /* fill all remaining height */
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 1rem;
+    padding: 0.5rem 0;
+  }
+
+  /* 4) Each relic button is prevented from shrinking */
+  #relicOptions .relic-option {
+    flex: 0 0 auto;
+    min-width: 120px;           /* tweak to taste */
+    box-sizing: border-box;
   }
 }
 
