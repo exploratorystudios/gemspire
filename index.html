@@ -1955,24 +1955,24 @@ transition: transform 0.6s ease-out;
 }
 
 @media screen and (max-width: 768px) {
-  /* Only when JS does style="display: block" */
+  /* Only when JS shows it */
   #relicSelectionScreen[style*="display: block"] {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    transform: none !important;      /* cancel the old centering transform */
-    display: flex;                   /* make it actually show & flex */
+    transform: none !important;
+    display: flex;
     flex-direction: column;
     overflow: hidden;
     padding: 1rem;
     box-sizing: border-box;
     background: rgba(0, 0, 0, 0.9);
-    z-index: 1000;                   /* keep it above everything */
+    z-index: 1000;
   }
 
-  /* Header + subtext fixed at top */
+  /* Header & description */
   #relicSelectionScreen[style*="display: block"] > h2,
   #relicSelectionScreen[style*="display: block"] > p {
     margin: 0;
@@ -1982,23 +1982,22 @@ transition: transform 0.6s ease-out;
     flex: 0 0 auto;
   }
 
-  /* Relics row: fill the middle, lay out horizontally & scroll */
+  /* → Vertical, scrollable relic list ← */
   #relicSelectionScreen[style*="display: block"] #relicOptions {
     flex: 1 1 auto;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;    /* stack top→bottom */
     flex-wrap: nowrap;
-    align-items: flex-start;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow-y: auto;          /* vertical scroll */
+    overflow-x: hidden;
     gap: 1rem;
     padding: 0.5rem 0;
   }
 
-  /* Each relic-button kept from shrinking */
+  /* Keep each relic‐option from shrinking */
   #relicSelectionScreen[style*="display: block"] #relicOptions .relic-option {
     flex: 0 0 auto;
-    min-width: 120px;   /* adjust to your relic card width */
+    width: 100%;               /* full width of container */
     box-sizing: border-box;
   }
 }
