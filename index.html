@@ -2107,6 +2107,123 @@ transition: transform 0.6s ease-out;
     }
 }
 
+/* Hard Mode Styling - Softer, more subtle */
+body.hard-mode {
+    background: linear-gradient(135deg, #1e1e2e 0%, #332d3d 50%, #4a3e3e 100%);
+}
+
+/* Hard Mode Particles - Subtle orange glow */
+body.hard-mode .bg-particle {
+    background: radial-gradient(circle, #f59e0b, transparent);
+    animation: floatHard 5s ease-in-out infinite;
+}
+
+@keyframes floatHard {
+    0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); opacity: 0.3; }
+    25% { transform: translateY(-12px) rotate(45deg) scale(1.1); opacity: 0.6; }
+    50% { transform: translateY(-20px) rotate(90deg) scale(0.9); opacity: 0.7; }
+    75% { transform: translateY(-12px) rotate(135deg) scale(1.1); opacity: 0.6; }
+}
+
+/* Hard Mode Board Styling - Subtle amber glow */
+body.hard-mode .game-board {
+    border: 2px solid rgba(245, 158, 11, 0.4);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+    background: rgba(30, 20, 0, 0.3);
+}
+
+/* Hard Mode Gem Styling - Warm amber for special gems */
+body.hard-mode .gem.special {
+    border-color: #f59e0b;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+}
+
+/* Hard Mode Stats Panel - Subtle amber accent */
+body.hard-mode .stats-panel {
+    border: 2px solid rgba(245, 158, 11, 0.3);
+    background: rgba(30, 20, 0, 0.2);
+}
+
+/* Hard Mode Stat Values - Warm amber */
+body.hard-mode .stat-value {
+    color: #f59e0b;
+}
+
+/* Hard Mode Moves Display - Soft orange warning */
+body.hard-mode .moves-left {
+    color: #fb923c;
+}
+
+/* Hard Mode Indicator - Gentle warning glow */
+.hard-mode-indicator {
+    text-align: center;
+    font-size: 14px;
+    color: #f59e0b;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+    animation: hardModeGlow 3s ease-in-out infinite;
+}
+
+@keyframes hardModeGlow {
+    0%, 100% { 
+        text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+        transform: scale(1);
+    }
+    50% { 
+        text-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
+        transform: scale(1.02);
+    }
+}
+
+/* Hard Mode Progress Bar - Warm gradient */
+body.hard-mode .progress-fill {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+/* Hard Mode Toggle Button */
+.hard-mode-toggle {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: #000;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 12px;
+    font-family: 'Orbitron', monospace;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin: 20px auto;
+    display: block;
+    box-shadow: 0 5px 20px rgba(245, 158, 11, 0.3);
+    min-width: 200px;
+}
+
+.hard-mode-toggle:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(245, 158, 11, 0.5);
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+.hard-mode-toggle:disabled {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.hard-mode-toggle.active {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    color: white;
+    box-shadow: 0 5px 20px rgba(220, 38, 38, 0.4);
+}
+
+.hard-mode-toggle.active:hover {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    box-shadow: 0 8px 30px rgba(220, 38, 38, 0.6);
+}
+
 </style>
 </head>
 <body>
@@ -2132,6 +2249,10 @@ transition: transform 0.6s ease-out;
         <div class="start-title">⚡ GEMSPIRE ⚡</div>
         <div class="start-subtitle">A mystical match-3 roguelike adventure</div>
         <button class="btn-start" onclick="startGame()">Begin Your Journey</button>
+
+		<button class="hard-mode-toggle" id="hardModeToggle" onclick="toggleHardMode()" disabled>
+			🔥 Hard Mode (Locked)
+		</button>
 
         <div class="game-rules">
             <div class="rules-title">How to Play</div>
@@ -2169,7 +2290,11 @@ transition: transform 0.6s ease-out;
 				<div class="progress-bar">
 					<div class="progress-fill" id="progressFill" style="width: 0%"></div>
 				</div>
-				
+
+				<div class="hard-mode-indicator" id="hardModeIndicator" style="display: none;">
+					⚠️ HARD MODE ACTIVE ⚠️
+				</div>
+
 				<!-- Score display directly in stats panel -->
 				<div class="score-display" id="scoreDisplay">0</div>
 				<div class="combo-display" id="comboDisplay">Combo x1</div>
@@ -2445,7 +2570,7 @@ transition: transform 0.6s ease-out;
 
 				this.scorePopupQueue = [];
 				this.isProcessingPopups = false;
-	
+
 				// Basic relic effects
 				this.bonusMoves = 0;
 				this.baseMultiplier = 1;
@@ -2471,12 +2596,16 @@ transition: transform 0.6s ease-out;
 				this.matchCountSinceJester = 0;
 				this.cascadeCountTotal = 0;
 				this.lastMatchPattern = null;
-	
+
 				// Crystal system - LOAD THESE FIRST
 				this.crystals = this.loadCrystals();
 				this.purchasedUpgrades = this.loadPurchasedUpgrades();
 				this.consumableInventory = this.loadConsumableInventory();
 				this.pendingPurchase = null;
+
+				// Hard Mode system - ADD THIS AFTER purchasedUpgrades is loaded
+				this.hardModeUnlocked = this.purchasedUpgrades['hard_mode_unlock'] || false;
+				this.hardModeActive = this.loadHardModeState();
 
 				// Booster system
 				this.activeBoosters = {};
@@ -2508,6 +2637,25 @@ transition: transform 0.6s ease-out;
 				
 				this.applyPermanentUpgrades();
 				console.log('Constructor: Applied permanent upgrades');
+			}
+			
+			applyHardMode() {
+				if (this.hardModeActive) {
+					document.body.classList.add('hard-mode');
+					document.getElementById('hardModeIndicator').style.display = 'block';
+				} else {
+					document.body.classList.remove('hard-mode');
+					document.getElementById('hardModeIndicator').style.display = 'none';
+				}
+			}
+
+			loadHardModeState() {
+				const saved = localStorage.getItem('gemspire_hard_mode_active');
+				return saved ? JSON.parse(saved) : false;
+			}
+
+			saveHardModeState() {
+				localStorage.setItem('gemspire_hard_mode_active', JSON.stringify(this.hardModeActive));
 			}
 
 			async shuffleBoard() {
@@ -3274,6 +3422,14 @@ transition: transform 0.6s ease-out;
 							price: 2000000,
 							rarity: 'legendary',
 							type: 'Prestige Upgrade'
+						},
+						{
+							id: 'hard_mode_unlock',
+							name: '🔥 Hard Mode',
+							desc: 'GREATLY increases difficulty: 60% higher targets, 25% lower gem values, 1 less move per floor, faster floor scaling',
+							price: 5000000,
+							rarity: 'legendary',
+							type: 'Prestige Upgrade'
 						}
 					],
 					cosmetics: [
@@ -3786,6 +3942,14 @@ transition: transform 0.6s ease-out;
 				if (this.purchasedUpgrades['relic_abundance']) {
 					this.grantStartingRelics();
 				}
+				
+				// Apply hard mode unlock if purchased
+				if (this.purchasedUpgrades['hard_mode_unlock']) {
+					this.hardModeUnlocked = true;
+				}
+				
+				// Apply hard mode styling
+				this.applyHardMode();
 			}
 
             initiatePurchase(itemId) {
@@ -4488,25 +4652,28 @@ transition: transform 0.6s ease-out;
                 }
             }
             
-            initializeGame() {
-                this.createBoard();
+			initializeGame() {
+				this.createBoard();
 				document.querySelectorAll('.gem').forEach(el => {
 				  el.style.gridRowStart    = +el.dataset.row + 1;
 				  el.style.gridColumnStart = +el.dataset.col + 1;
 				});
-                this.updateUI();
-                this.addEventListeners();
-                this.initializeScoreDisplay();
-                this.updateCrystalDisplay();
-                this.updateConsumablesDisplay();
-                this.updateBoostersDisplay();
-                
+				this.updateUI();
+				this.addEventListeners();
+				this.initializeScoreDisplay();
+				this.updateCrystalDisplay();
+				this.updateConsumablesDisplay();
+				this.updateBoostersDisplay();
+				
 				this.updateRelicsDisplay();
+				
+				// Apply hard mode styling
+				this.applyHardMode();
 
-                // Start background music and show audio toggle
-                this.playBackgroundMusic('bg1');
-                this.showIngameAudioToggle();
-            }
+				// Start background music and show audio toggle
+				this.playBackgroundMusic('bg1');
+				this.showIngameAudioToggle();
+			}
 
             initializeScoreDisplay() {
                 this.displayScore = this.score;
@@ -4836,6 +5003,11 @@ transition: transform 0.6s ease-out;
 				// Start with base random value
 				let baseValue = Math.floor(Math.random() * 25) + 15;
 				
+				// Apply hard mode penalty - 25% lower gem values
+				if (this.hardModeActive) {
+					baseValue = Math.floor(baseValue * 0.75);
+				}
+				
 				// Apply base gem value bonus from Gem Mastery and/or Ascended Mastery
 				if (this.baseGemValueBonus) {
 					baseValue += this.baseGemValueBonus;
@@ -5112,9 +5284,21 @@ transition: transform 0.6s ease-out;
 				this.boosterUsesThisFloor = 0;
 
 				// Calculate NEW target score based on floor progression (not reduced score)
-				const baseTargetScore = Math.floor(800 * Math.pow(1.45, this.floor - 1));
+				let baseTargetScore = Math.floor(800 * Math.pow(1.45, this.floor - 1));
+				
+				// Apply Hard Mode scaling - 60% higher targets
+				if (this.hardModeActive) {
+					baseTargetScore = Math.floor(baseTargetScore * 1.6);
+				}
+				
 				this.targetScore = baseTargetScore;
-				this.multiplier += 0.15;
+				
+				// Apply different scaling based on difficulty
+				if (this.hardModeActive) {
+					this.multiplier += 0.1; // Slower multiplier growth in hard mode
+				} else {
+					this.multiplier += 0.15;
+				}
 				
 				// Handle score overflow if purchased
 				let carryoverScore = 0;
@@ -5168,7 +5352,9 @@ transition: transform 0.6s ease-out;
 				}
 
 				// Reset moves (including any bonusMoves from relics)
-				this.moves = 4 + (this.bonusMoves || 0);
+				// Hard mode: 1 less move per floor (3 instead of 4)
+				let baseMoves = this.hardModeActive ? 3 : 4;
+				this.moves = baseMoves + (this.bonusMoves || 0);
 
 				// Hide the relic-selection overlay
 				document.getElementById('relicSelectionScreen').style.display = 'none';
@@ -6011,18 +6197,12 @@ transition: transform 0.6s ease-out;
 			  console.log('🎭 Jester\'s Gambit complete');
 			}
 			
-            restartGame() {
+			restartGame() {
 				console.log('restartGame called - preserving audio state');
 				
 				// Reset permanent upgrade values
 				this.baseGemValueBonus = 0;
 				this.minimumGemValue = 0;
-
-				this.baseGemValueBonus = 0;
-				this.minimumGemValue = 0;
-
-				// Apply permanent upgrades
-				this.applyPermanentUpgrades();
 
 				// Store current audio state BEFORE any changes
 				const wasAudioEnabled = this.audioEnabled;
@@ -6044,7 +6224,9 @@ transition: transform 0.6s ease-out;
 				// Reset all game state
 				this.score = 0;
 				this.displayScore = 0;
-				this.moves = 4;
+				// Hard mode: different starting moves
+				let baseMoves = this.hardModeActive ? 3 : 4;
+				this.moves = baseMoves;
 				this.floor = 1;
 				this.targetScore = 800;
 				this.multiplier = this.purchasedUpgrades['reality_breaker'] ? 5.0 : 1.0;
@@ -6083,8 +6265,11 @@ transition: transform 0.6s ease-out;
 				// Clear active boosters
 				this.activeBoosters = {};
 				
-				// Apply permanent upgrades
+				// Apply permanent upgrades (including hard mode unlock)
 				this.applyPermanentUpgrades();
+				
+				// Hard mode stays as chosen by player (no forced activation)
+				this.applyHardMode();
 				
 				// Hide all overlay screens
 				document.getElementById('gameOverScreen').style.display = 'none';
@@ -6132,49 +6317,46 @@ transition: transform 0.6s ease-out;
 			}
 		}
 		
-        function enableAudioAndStart() {
-            // Hide audio permission screen
-            document.getElementById('audioPermissionScreen').style.display = 'none';
-            document.getElementById('startScreen').style.display = 'flex';
-            
-            // Create game instance and enable audio
-            if (!window.tempGameForMusic) {
-                window.tempGameForMusic = new Gemspire();
-            }
-            window.tempGameForMusic.enableAudio();
-            window.tempGameForMusic.playBackgroundMusic('title');
-            window.tempGameForMusic.showIngameAudioToggle();
-        }
+		function enableAudioAndStart() {
+			document.getElementById('audioPermissionScreen').style.display = 'none';
+			document.getElementById('startScreen').style.display = 'flex';
+			
+			if (!window.tempGameForMusic) {
+				window.tempGameForMusic = new Gemspire();
+			}
+			window.tempGameForMusic.enableAudio();
+			window.tempGameForMusic.playBackgroundMusic('title');
+			window.tempGameForMusic.showIngameAudioToggle();
+			
+			// Update hard mode button
+			updateHardModeButton();
+		}
 
-        function disableAudioAndStart() {
-            // Hide audio permission screen
-            document.getElementById('audioPermissionScreen').style.display = 'none';
-            document.getElementById('startScreen').style.display = 'flex';
-            
-            // Create game instance but keep audio disabled
-            if (!window.tempGameForMusic) {
-                window.tempGameForMusic = new Gemspire();
-            }
-            window.tempGameForMusic.disableAudio();
-            window.tempGameForMusic.showIngameAudioToggle();
-        }
+		function disableAudioAndStart() {
+			document.getElementById('audioPermissionScreen').style.display = 'none';
+			document.getElementById('startScreen').style.display = 'flex';
+			
+			if (!window.tempGameForMusic) {
+				window.tempGameForMusic = new Gemspire();
+			}
+			window.tempGameForMusic.disableAudio();
+			window.tempGameForMusic.showIngameAudioToggle();
+			
+			// Update hard mode button
+			updateHardModeButton();
+		}
 
 		function startGame() {
 			console.log('startGame called - DESTROYING all audio');
 			
-			// Store audio preference
+			// Store preferences
 			const shouldEnableAudio = window.tempGameForMusic ? window.tempGameForMusic.audioEnabled : false;
+			const shouldUseHardMode = window.tempGameForMusic ? window.tempGameForMusic.hardModeActive : false;
 			
-			// COMPLETELY destroy temp game audio
+			// Destroy temp game audio
 			if (window.tempGameForMusic) {
 				window.tempGameForMusic.destroyAllAudio();
 				window.tempGameForMusic = null;
-			}
-			
-			// COMPLETELY destroy existing game audio
-			if (window.game) {
-				window.game.destroyAllAudio();
-				window.game = null;
 			}
 			
 			// Hide start screen and show game
@@ -6185,8 +6367,12 @@ transition: transform 0.6s ease-out;
 			setTimeout(() => {
 				console.log('Creating completely new game with fresh audio');
 				
-				// Create completely new game instance
+				// Create new game instance
 				window.game = new Gemspire();
+				
+				// Apply hard mode setting - THIS IS IMPORTANT!
+				window.game.hardModeActive = shouldUseHardMode;
+				window.game.saveHardModeState(); // Save it in the new instance too
 				
 				if (shouldEnableAudio) {
 					window.game.enableAudio();
@@ -6197,6 +6383,37 @@ transition: transform 0.6s ease-out;
 				window.game.initializeGame();
 				console.log('New game created successfully');
 			}, 300);
+		}
+
+		function toggleHardMode() {
+			const gameInstance = window.tempGameForMusic;
+			if (!gameInstance || !gameInstance.hardModeUnlocked) return;
+			
+			gameInstance.hardModeActive = !gameInstance.hardModeActive;
+			gameInstance.saveHardModeState(); // ← Add this line to save the choice
+			updateHardModeButton();
+		}
+
+		function updateHardModeButton() {
+			const button = document.getElementById('hardModeToggle');
+			const gameInstance = window.tempGameForMusic;
+			
+			if (!gameInstance) return;
+			
+			if (gameInstance.hardModeUnlocked) {
+				button.disabled = false;
+				if (gameInstance.hardModeActive) {
+					button.textContent = '🔥 Hard Mode: ON';
+					button.classList.add('active');
+				} else {
+					button.textContent = '🔥 Hard Mode: OFF';
+					button.classList.remove('active');
+				}
+			} else {
+				button.disabled = true;
+				button.textContent = '🔥 Hard Mode (Locked)';
+				button.classList.remove('active');
+			}
 		}
 
 		function restartGame() {
@@ -6231,6 +6448,7 @@ transition: transform 0.6s ease-out;
 				console.log('Creating fresh temp game for title screen');
 				
 				const audioWasEnabled = window.game ? window.game.audioEnabled : false;
+				const hardModeWasActive = window.game ? window.game.hardModeActive : false; // ← Add this
 				
 				// Destroy old temp game if it exists
 				if (window.tempGameForMusic) {
@@ -6240,6 +6458,9 @@ transition: transform 0.6s ease-out;
 				// Create completely new temp game
 				window.tempGameForMusic = new Gemspire();
 				
+				// Restore hard mode state - THIS IS IMPORTANT!
+				window.tempGameForMusic.hardModeActive = hardModeWasActive;
+				
 				if (audioWasEnabled) {
 					window.tempGameForMusic.enableAudio();
 					window.tempGameForMusic.playBackgroundMusic('title');
@@ -6248,13 +6469,15 @@ transition: transform 0.6s ease-out;
 				}
 				
 				window.tempGameForMusic.showIngameAudioToggle();
+				updateHardModeButton(); // ← Add this to update the button state
 			}, 200);
 		}
-			function openOptionsMenu() {
-				if (game) {
-					window.game.updateOptionsMenu();
-				} else if (window.tempGameForMusic) {
-                window.tempGameForMusic.updateOptionsMenu();
+		
+		function openOptionsMenu() {
+			if (game) {
+				window.game.updateOptionsMenu();
+			} else if (window.tempGameForMusic) {
+			window.tempGameForMusic.updateOptionsMenu();
             }
             document.getElementById('optionsScreen').style.display = 'block';
         }
