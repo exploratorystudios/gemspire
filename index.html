@@ -2051,6 +2051,62 @@ transition: transform 0.6s ease-out;
   }
 }
 
+/* Make the stats panel scrollable */
+.stats-panel {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(124, 58, 237, 0.3);
+    position: relative;
+    
+    /* Add scrolling capabilities */
+    max-height: 80vh; /* Limit height to 80% of viewport */
+    overflow-y: auto; /* Enable vertical scrolling */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Modern Scrollbar Styling for Stats Panel */
+.stats-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.stats-panel::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    margin: 4px 0;
+}
+
+.stats-panel::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #7c3aed, #9775fa);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 6px rgba(124, 58, 237, 0.3);
+}
+
+.stats-panel::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+    box-shadow: 0 0 8px rgba(124, 58, 237, 0.5);
+}
+
+/* Firefox Scrollbar */
+.stats-panel {
+    scrollbar-width: thin;
+    scrollbar-color: #7c3aed rgba(0, 0, 0, 0.2);
+}
+
+/* Ensure content doesn't get cut off */
+.stats-panel > * {
+    flex-shrink: 0; /* Prevent items from shrinking */
+}
+
+/* Mobile adjustments */
+@media screen and (max-width: 768px) {
+    .stats-panel {
+        max-height: 60vh; /* Smaller max height on mobile */
+    }
+}
+
 </style>
 </head>
 <body>
@@ -3778,10 +3834,8 @@ transition: transform 0.6s ease-out;
             }
 
 			updateConsumablesDisplay() {
-				// Don't update during animations to prevent re-enabling buttons
-				if (this.interactionsDisabled || this.animating) {
-					return;
-				}
+				// Don't update button states during animations, but allow count updates
+				const shouldUpdateButtonStates = !(this.interactionsDisabled || this.animating);
 				
 				const panel = document.getElementById('consumablesPanel');
 				const buttonsContainer = document.getElementById('consumableButtons');
@@ -3815,8 +3869,8 @@ transition: transform 0.6s ease-out;
 								button.dataset.itemId = itemId;
 								button.onclick = () => this.useConsumable(itemId);
 								
-								// Apply disabled state if interactions are disabled
-								if (this.interactionsDisabled || this.animating) {
+								// Apply disabled state only if we should update button states
+								if (!shouldUpdateButtonStates) {
 									button.disabled = true;
 									button.style.opacity = '0.5';
 									button.style.cursor = 'not-allowed';
@@ -3876,6 +3930,9 @@ transition: transform 0.6s ease-out;
 				  this.showComboIndicator('💫 2 consumables used → –1 Move');
 				  this.updateUI();
 				}
+				
+				// Force update displays after consumable use
+				this.updateConsumablesDisplay();
 			}
 
 			showGemSelectionModal() {
@@ -3956,12 +4013,15 @@ transition: transform 0.6s ease-out;
 				
 				// Disable interactions during lightning storm
 				this.animating = true;
+				this.disableAllInteractions();
 				
 				console.log('Consuming lightning storm directly...');
 				
 				// Consume the lightning storm from inventory
 				this.consumableInventory['lightning_storm']--;
 				this.saveConsumableInventory();
+				
+				// Force update the display to show new count immediately
 				this.updateConsumablesDisplay();
 				
 				let totalStormScore = 0;
@@ -3994,7 +4054,10 @@ transition: transform 0.6s ease-out;
 				
 				if (struckGems.length === 0) {
 					this.showComboIndicator(`⚡ No ${this.gemSymbols[gemType]} gems found!`);
-					this.animating = false; // Re-enable interactions
+					
+					// IMPORTANT: Re-enable interactions even when no gems found
+					this.animating = false;
+					this.enableAllInteractions();
 					return;
 				}
 				
@@ -4035,8 +4098,9 @@ transition: transform 0.6s ease-out;
 				this.updateUI();
 				this.checkGameState();
 				
-				// Re-enable interactions
+				// CRITICAL FIX: Re-enable interactions at the end
 				this.animating = false;
+				this.enableAllInteractions();
 				
 				console.log('=== LIGHTNING STORM COMPLETE ===');
 			}
@@ -4232,10 +4296,8 @@ transition: transform 0.6s ease-out;
             }
 
 			updateAvailableBoostersDisplay() {
-				// Don't update during animations to prevent re-enabling buttons
-				if (this.interactionsDisabled || this.animating) {
-					return;
-				}
+				// Don't update button states during animations, but allow count updates
+				const shouldUpdateButtonStates = !(this.interactionsDisabled || this.animating);
 				
 				const panel = document.getElementById('availableBoostersPanel');
 				const buttonsContainer = document.getElementById('availableBoosterButtons');
@@ -4283,8 +4345,8 @@ transition: transform 0.6s ease-out;
 									button.onclick = () => this.activateBooster(boosterId);
 								}
 								
-								// Apply disabled state if interactions are disabled
-								if (this.interactionsDisabled || this.animating) {
+								// Apply disabled state only if we should update button states
+								if (!shouldUpdateButtonStates) {
 									button.disabled = true;
 									button.style.opacity = '0.5';
 									button.style.cursor = 'not-allowed';
