@@ -1780,6 +1780,7 @@ transition: transform 0.6s ease-out;
     flex-direction: column;
     overflow-x: hidden;
     padding: 5px;              /* tighten up mobile padding */
+	gap: 0 !important;
   }
 
   /* 1) Board wrapper (use your existing .game-board-container) */
@@ -1789,6 +1790,7 @@ transition: transform 0.6s ease-out;
     max-width: 400px;
     height: auto;
     margin: 0 auto 8px;
+	margin-bottom: 0 !important;
   }
 
   /* 2) Sidebar grouping */
@@ -1807,7 +1809,7 @@ transition: transform 0.6s ease-out;
   .ui-panel .stats-panel {
     order: 1;
     width: 100%;
-    margin: 0 auto;
+    margin: 0 !important;
     box-sizing: border-box;
   }
 
@@ -1981,7 +1983,7 @@ html, body, .game-container {
     margin: 5px 0;
     box-sizing: border-box;
   }
-}
+}	
 
 /* ─── Desktop & landscape: show desktop relics, hide mobile relics ─── */
 .relics-desktop { display: block; }
