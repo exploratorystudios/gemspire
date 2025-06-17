@@ -10,16 +10,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
 
 /* ─────────────────────────────────────────────────────────
- HIDE GAME UI ON AUDIO‐PERMISSION & START SCREENS
+ ONLY hide the game UI WHILE those overlays are actually shown
  ───────────────────────────────────────────────────────── */
-/* when the audio‐permission or start screen is visible,
-	make sure the game elements stay hidden underneath */
-.audio-permission-screen ~ #gameContainer,
-.start-screen            ~ #gameContainer,
-.audio-permission-screen ~ #gameContainer .game-board-container,
-.audio-permission-screen ~ #gameContainer .ui-panel,
-.start-screen            ~ #gameContainer .game-board-container,
-.start-screen            ~ #gameContainer .ui-panel {
+#audioPermissionScreen[style*="display: flex"] ~ #gameContainer,
+#startScreen[style*="display: flex"] ~ #gameContainer,
+#audioPermissionScreen[style*="display: flex"] ~ #gameContainer .game-board-container,
+#audioPermissionScreen[style*="display: flex"] ~ #gameContainer .ui-panel,
+#startScreen[style*="display: flex"] ~ #gameContainer .game-board-container,
+#startScreen[style*="display: flex"] ~ #gameContainer .ui-panel {
 	display: none !important;
 }
 
@@ -6285,4 +6283,3 @@ html, body, .game-container {
     </script>
 </body>
 </html>
-4. most importantly, output comprehensive code
