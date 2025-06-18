@@ -5201,9 +5201,10 @@ body.hard-mode .progress-fill {
                 
                 await this.processMatches();
                 
+				this.animating = false;
+				
                 this.updateUI();
                 this.checkGameState();
-                this.animating = false;
 				this.resetMatchCooldowns();
             }
 
