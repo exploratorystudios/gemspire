@@ -4912,14 +4912,11 @@ body.hard-mode .progress-fill {
 				gameBoard.innerHTML = '';
 				this.board = [];
 				
+				// Disable gem switching AND consumables during board creation
 				this.animating = true;
 				this.disableAllInteractions();
 				
 				this.generateValidBoard();
-				
-				// Adjust timing - slightly faster on mobile but not too fast
-				const animationDelay = this.isLowPerformanceDevice ? 60 : 80; // Was 40, now 60
-				const dropDuration = this.isLowPerformanceDevice ? 0.5 : 0.6; // Was 0.3, now 0.5
 				
 				for (let row = 0; row < 7; row++) {
 					for (let col = 0; col < 7; col++) {
@@ -4933,8 +4930,7 @@ body.hard-mode .progress-fill {
 						gemElement.textContent = gem.symbol;
 						gemElement.dataset.row = row;
 						gemElement.dataset.col = col;
-						gemElement.dataset.gemId = gem.id;
-						
+						gemElement.dataset.gemId = gem.id;  
 						const valueDisplay = document.createElement('div');
 						valueDisplay.className = 'gem-value-display';
 						valueDisplay.textContent = gem.value;
@@ -4946,36 +4942,40 @@ body.hard-mode .progress-fill {
 						gameBoard.appendChild(gemElement);
 						
 						setTimeout(() => {
-							gemElement.style.transition = `transform ${dropDuration}s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease`;
+							gemElement.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease';
 							gemElement.style.transform = 'translateY(0)';
 							gemElement.style.opacity = '1';
 							
-							// Play sound for every 2nd gem on low-perf devices (instead of every 3rd)
-							if (!this.isLowPerformanceDevice || (row * 7 + col) % 2 === 0) {
-								setTimeout(() => {
-									if (this.audioEnabled) {
-										this.playSound('place');
-									}
-								}, 50);
-							}
-						}, (row * 7 + col) * animationDelay);
+							// Play place sound for each gem
+							setTimeout(() => {
+								if (this.audioEnabled) {
+									this.playSound('place');
+								}
+							}, 50);
+						}, (row * 7 + col) * 80);
 					}
 				}
 				
-				// Add a simplified wave effect for mobile (instead of skipping entirely)
-				const totalPlacementTime = (7 * 7 - 1) * animationDelay + dropDuration * 1000;
+				// After all gems are placed, create wave effect
+				const totalPlacementTime = (7 * 7 - 1) * 80 + 600; // Last gem delay + animation time
+
+				setTimeout(() => {
+					this.createWaveEffect();
+				}, totalPlacementTime + 200);
+
+				// Calculate total time for wave effect completion
+				const waveCompletionTime = totalPlacementTime + 200 + (6 + 6) * 33 + 220 + (49 * 9) + 275;
 				
-				if (!this.isLowPerformanceDevice) {
-					// Full wave effect on desktop
-					setTimeout(() => {
-						this.createWaveEffect();
-					}, totalPlacementTime + 200);
-				} else {
-					// Simplified wave effect for mobile - just a gentle bounce
-					setTimeout(() => {
-						this.createWaveEffect();
-					}, totalPlacementTime + 200);
-				}
+				// Re-enable ALL interactions after wave completes
+				setTimeout(() => {
+					this.animating = false;
+					this.enableAllInteractions();
+				}, waveCompletionTime);
+				
+				// Apply cosmetic themes after board creation
+				setTimeout(() => {
+					this.applyCurrentCosmetics();
+				}, 1000);
 			}
 
 			createWaveEffect() {
