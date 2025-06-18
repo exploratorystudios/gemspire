@@ -6925,43 +6925,29 @@ body.hard-mode .progress-fill {
         });
 		
 		(function(){
-		  const btn = document.getElementById('fullscreenBtn');
-		  const gameEl = document.getElementById('gameContainer');
+		  const btn    = document.getElementById('fullscreenBtn');
+		  const target = document.documentElement; // ← whole page
 
-		  // helper to request fullscreen
 		  function enterFS() {
-			if (gameEl.requestFullscreen)              return gameEl.requestFullscreen();
-			if (gameEl.webkitRequestFullscreen)        return gameEl.webkitRequestFullscreen();      // Safari
-			if (gameEl.msRequestFullscreen)            return gameEl.msRequestFullscreen();          // IE11
+			if (target.requestFullscreen)      return target.requestFullscreen();
+			if (target.webkitRequestFullscreen) return target.webkitRequestFullscreen();
+			if (target.msRequestFullscreen)     return target.msRequestFullscreen();
 		  }
-		  // helper to exit fullscreen
 		  function exitFS() {
-			if (document.exitFullscreen)               return document.exitFullscreen();
-			if (document.webkitExitFullscreen)         return document.webkitExitFullscreen();      // Safari
-			if (document.msExitFullscreen)             return document.msExitFullscreen();          // IE11
+			if (document.exitFullscreen)      return document.exitFullscreen();
+			if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+			if (document.msExitFullscreen)     return document.msExitFullscreen();
 		  }
 
 		  btn.addEventListener('click', () => {
-			if (!document.fullscreenElement &&
-				!document.webkitFullscreenElement &&
-				!document.msFullscreenElement) {
+			if (!document.fullscreenElement) {
 			  enterFS();
-			  btn.textContent = '⤡'; // change icon to “exit” if you like
+			  btn.textContent = '⤡';
 			} else {
 			  exitFS();
 			  btn.textContent = '⤢';
 			}
 		  });
-
-		  // optional: auto-enter fullscreen when game starts on mobile
-		  const originalStart = window.startGame;
-		  window.startGame = function(){
-			originalStart();
-			if (window.innerWidth <= 768) {
-			  // wait a tick for the gameContainer to show
-			  setTimeout(enterFS, 300);
-			}
-		  };
 		})();
 
     </script>
