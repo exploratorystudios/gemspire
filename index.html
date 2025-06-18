@@ -3633,7 +3633,7 @@ html, body {
 						{
 							id: 'hard_mode_unlock',
 							name: '🔥 Hard Mode',
-							desc: 'GREATLY increases difficulty: 500% higher targets, 40% lower gem values, 1 less move per floor, faster floor scaling',
+							desc: 'GREATLY increases difficulty: 1000% higher targets, 40% lower gem values, 1 less move per floor, faster floor scaling',
 							price: 1000000,
 							rarity: 'legendary',
 							type: 'Prestige Upgrade'
@@ -5511,9 +5511,9 @@ html, body {
 				// Calculate NEW target score based on floor progression (not reduced score)
 				let baseTargetScore = Math.floor(800 * Math.pow(1.45, this.floor - 1));
 				
-				// Apply Hard Mode scaling
+				// Apply Hard Mode scaling - 120% higher targets
 				if (this.hardModeActive) {
-					baseTargetScore = Math.floor(baseTargetScore * 5);
+					baseTargetScore = Math.floor(baseTargetScore * 10);
 				}
 				
 				this.targetScore = baseTargetScore;
