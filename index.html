@@ -2310,16 +2310,6 @@ body.hard-mode .progress-fill {
     }
 }
 
-/* General performance optimizations for all devices */
-.gem {
-    contain: layout style paint; /* Isolate rendering */
-}
-
-.game-board {
-    contain: layout style paint;
-    will-change: contents; /* Hint that contents will change */
-}
-
 /* Reduce repaints during animations */
 .gem.matching,
 .gem.lightning-strike,
@@ -2338,6 +2328,44 @@ body.hard-mode .progress-fill {
 .sparkle-particle {
     will-change: transform, opacity;
     contain: layout style paint;
+}
+
+html, body {
+  height: 100%;
+  margin: 0; padding: 0;
+  background: linear-gradient(135deg, #1e1e2e, #2d1b3d 50%, #3e2723);
+  background-color: #1e1e2e; /* fallback */
+}
+
+.game-container {
+  /* instead of height: 100vh; */
+  height: 100%; 
+}
+
+@supports(height: 100dvh) {
+  .game-container {
+    height: 100dvh;
+  }
+}
+
+/* Board & panels */
+.game-board,
+.stats-panel,
+.relics-panel {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+  /* do both prefixes: */
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+
+  /* optional hardware-accelerate: */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Gems just hint for transform, not full “contain”: */
+.gem {
+  will-change: transform, opacity;
 }
 
 /* hide by default */
