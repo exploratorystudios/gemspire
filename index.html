@@ -3009,9 +3009,11 @@ body.hard-mode .progress-fill {
 					this.sounds.lightning.volume = sfxVol;
 					this.sounds.void.volume = sfxVol;
 					this.sounds.explode.volume = sfxVol;
-					this.sounds.togglemute.volume = sfxVol;  // Add volume setting for the new sound
+					this.sounds.togglemute.volume = sfxVol;
+					this.sounds.difficultytoggleon.volume = sfxVol;   // ← Add this
+					this.sounds.difficultytoggleoff.volume = sfxVol;  // ← Add this
 				}
-			}		
+			}
 			
 			applyCurrentCosmetics() {
 			  // 1) strip out any old theme classes
@@ -3478,7 +3480,9 @@ body.hard-mode .progress-fill {
 					title: new Audio('title.mp3'),
 					lose: new Audio('lose.mp3'),
 					gameover: new Audio('gameover.mp3'),
-					togglemute: new Audio('togglemute.mp3')  // Add the new sound
+					togglemute: new Audio('togglemute.mp3'),
+					difficultytoggleon: new Audio('difficultytoggleon.mp3'),
+					difficultytoggleoff: new Audio('difficultytoggleoff.mp3')
 				};
 				
 				// Set volume levels
@@ -3488,7 +3492,10 @@ body.hard-mode .progress-fill {
 				this.sounds.relic.volume = 0.7;
 				this.sounds.purchase.volume = 0.6;
 				this.sounds.lose.volume = 0.8;
-				this.sounds.togglemute.volume = 0.7;  // Set volume for the new sound				
+				this.sounds.togglemute.volume = 0.7;
+				this.sounds.difficultytoggleon.volume = 0.6;   // ← Add this
+				this.sounds.difficultytoggleoff.volume = 0.6;  // ← Add this
+				
 				// Background music settings - START MUTED AND PAUSED
 				this.sounds.bg1.volume = 0;
 				this.sounds.bg1.loop = true;
@@ -6389,8 +6396,31 @@ body.hard-mode .progress-fill {
 			const gameInstance = window.tempGameForMusic;
 			if (!gameInstance || !gameInstance.hardModeUnlocked) return;
 			
+			// Toggle the state first
 			gameInstance.hardModeActive = !gameInstance.hardModeActive;
-			gameInstance.saveHardModeState(); // ← Add this line to save the choice
+			
+			// Play the appropriate sound based on the NEW state
+			if (gameInstance.audioEnabled && gameInstance.sounds) {
+				if (gameInstance.hardModeActive) {
+					// Hard mode turned ON
+					if (gameInstance.sounds.difficultytoggleon) {
+						gameInstance.sounds.difficultytoggleon.currentTime = 0;
+						gameInstance.sounds.difficultytoggleon.play().catch(e => {
+							console.log('Difficulty toggle ON sound play failed:', e);
+						});
+					}
+				} else {
+					// Hard mode turned OFF
+					if (gameInstance.sounds.difficultytoggleoff) {
+						gameInstance.sounds.difficultytoggleoff.currentTime = 0;
+						gameInstance.sounds.difficultytoggleoff.play().catch(e => {
+							console.log('Difficulty toggle OFF sound play failed:', e);
+						});
+					}
+				}
+			}
+			
+			gameInstance.saveHardModeState();
 			updateHardModeButton();
 		}
 
