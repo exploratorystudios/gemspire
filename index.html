@@ -2340,6 +2340,27 @@ body.hard-mode .progress-fill {
     contain: layout style paint;
 }
 
+/* hide by default */
+.fullscreen-btn {
+  display: none;
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 9999;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 18px;
+}
+/* show only ≤768px */
+@media screen and (max-width: 768px) {
+  .fullscreen-btn {
+    display: block;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2465,6 +2486,8 @@ body.hard-mode .progress-fill {
 
         </div>
     </div>
+
+	<button id="fullscreenBtn" class="fullscreen-btn">⤢</button>
 
     <div class="game-over" id="relicSelectionScreen">
         <h2>Choose Your Relic</h2>
@@ -6900,6 +6923,47 @@ body.hard-mode .progress-fill {
             // Show audio permission screen first
             document.getElementById('audioPermissionScreen').style.display = 'flex';
         });
+		
+		(function(){
+		  const btn = document.getElementById('fullscreenBtn');
+		  const gameEl = document.getElementById('gameContainer');
+
+		  // helper to request fullscreen
+		  function enterFS() {
+			if (gameEl.requestFullscreen)              return gameEl.requestFullscreen();
+			if (gameEl.webkitRequestFullscreen)        return gameEl.webkitRequestFullscreen();      // Safari
+			if (gameEl.msRequestFullscreen)            return gameEl.msRequestFullscreen();          // IE11
+		  }
+		  // helper to exit fullscreen
+		  function exitFS() {
+			if (document.exitFullscreen)               return document.exitFullscreen();
+			if (document.webkitExitFullscreen)         return document.webkitExitFullscreen();      // Safari
+			if (document.msExitFullscreen)             return document.msExitFullscreen();          // IE11
+		  }
+
+		  btn.addEventListener('click', () => {
+			if (!document.fullscreenElement &&
+				!document.webkitFullscreenElement &&
+				!document.msFullscreenElement) {
+			  enterFS();
+			  btn.textContent = '⤡'; // change icon to “exit” if you like
+			} else {
+			  exitFS();
+			  btn.textContent = '⤢';
+			}
+		  });
+
+		  // optional: auto-enter fullscreen when game starts on mobile
+		  const originalStart = window.startGame;
+		  window.startGame = function(){
+			originalStart();
+			if (window.innerWidth <= 768) {
+			  // wait a tick for the gameContainer to show
+			  setTimeout(enterFS, 300);
+			}
+		  };
+		})();
+
     </script>
 </body>
 </html>
