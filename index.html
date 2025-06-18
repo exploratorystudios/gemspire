@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Gemspire - Match-3 Roguelike</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
@@ -435,7 +435,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(124, 58, 237, 0.2));
+    background: linear-gradient(135deg, #1e1e2e 0%, #2d1b3d 50%, #3e2723 100%);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -1361,7 +1361,7 @@ transition: transform 0.6s ease-out;
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(124, 58, 237, 0.3));
+    background: linear-gradient(135deg, #1e1e2e 0%, #2d1b3d 50%, #3e2723 100%);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -2224,6 +2224,45 @@ body.hard-mode .progress-fill {
     box-shadow: 0 8px 30px rgba(220, 38, 38, 0.6);
 }
 
+/* Add this class for performance mode */
+@media (max-width: 1024px) {
+    /* Disable complex animations on tablets */
+    .bg-particle {
+        animation: none;
+        opacity: 0.05;
+    }
+    
+    /* Simplify gem animations */
+    .gem {
+        transition: transform 0.2s ease, opacity 0.2s ease !important;
+    }
+    
+    /* Disable glow effects on mobile/tablet */
+    .gem.selected {
+        animation: none;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+    }
+    
+    /* Reduce particle effects */
+    .enhanced-particles {
+        display: none;
+    }
+}
+
+/* Add GPU acceleration hints */
+.gem {
+    will-change: transform, opacity;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+.game-board {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
 </style>
 </head>
 <body>
@@ -2637,8 +2676,49 @@ body.hard-mode .progress-fill {
 				
 				this.applyPermanentUpgrades();
 				console.log('Constructor: Applied permanent upgrades');
+
+				this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+				this.isLowPerformanceDevice = this.detectLowPerformanceDevice();
+				
+				// Apply performance optimizations
+				if (this.isLowPerformanceDevice) {
+					this.applyPerformanceOptimizations();
+				}
 			}
-			
+
+			detectLowPerformanceDevice() {
+				// Check for iPad or other tablets
+				const isIPad = /iPad/.test(navigator.userAgent) || 
+							   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+				const isMobile = /iPhone|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+				
+				return isIPad || isMobile;
+			}
+
+			applyPerformanceOptimizations() {
+				// Reduce background particles
+				const bgAnimation = document.getElementById('bgAnimation');
+				if (bgAnimation) {
+					bgAnimation.innerHTML = ''; // Remove all particles
+					// Add just a few static ones
+					for (let i = 0; i < 5; i++) {
+						const particle = document.createElement('div');
+						particle.className = 'bg-particle';
+						particle.style.left = Math.random() * 100 + '%';
+						particle.style.top = Math.random() * 100 + '%';
+						particle.style.opacity = '0.05';
+						particle.style.animation = 'none';
+						bgAnimation.appendChild(particle);
+					}
+				}
+				
+				// Disable particle effects by default
+				this.activeParticleEffects = false;
+				
+				// Reduce animation durations
+				this.animationSpeed = 0.7; // 70% of normal speed
+			}
+
 			applyHardMode() {
 				if (this.hardModeActive) {
 					document.body.classList.add('hard-mode');
@@ -4825,11 +4905,13 @@ body.hard-mode .progress-fill {
 				gameBoard.innerHTML = '';
 				this.board = [];
 				
-				// Disable gem switching AND consumables during board creation
 				this.animating = true;
 				this.disableAllInteractions();
 				
 				this.generateValidBoard();
+				
+				const animationDelay = this.isLowPerformanceDevice ? 40 : 80; // Faster on tablets
+				const dropDuration = this.isLowPerformanceDevice ? 0.3 : 0.6; // Faster animations
 				
 				for (let row = 0; row < 7; row++) {
 					for (let col = 0; col < 7; col++) {
@@ -4843,7 +4925,8 @@ body.hard-mode .progress-fill {
 						gemElement.textContent = gem.symbol;
 						gemElement.dataset.row = row;
 						gemElement.dataset.col = col;
-						gemElement.dataset.gemId = gem.id;  
+						gemElement.dataset.gemId = gem.id;
+						
 						const valueDisplay = document.createElement('div');
 						valueDisplay.className = 'gem-value-display';
 						valueDisplay.textContent = gem.value;
@@ -4855,40 +4938,37 @@ body.hard-mode .progress-fill {
 						gameBoard.appendChild(gemElement);
 						
 						setTimeout(() => {
-							gemElement.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease';
+							gemElement.style.transition = `transform ${dropDuration}s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease`;
 							gemElement.style.transform = 'translateY(0)';
 							gemElement.style.opacity = '1';
 							
-							// Play place sound for each gem
-							setTimeout(() => {
-								if (this.audioEnabled) {
-									this.playSound('place');
-								}
-							}, 50);
-						}, (row * 7 + col) * 80);
+							// Only play sound for every 3rd gem on low-perf devices
+							if (!this.isLowPerformanceDevice || (row * 7 + col) % 3 === 0) {
+								setTimeout(() => {
+									if (this.audioEnabled) {
+										this.playSound('place');
+									}
+								}, 50);
+							}
+						}, (row * 7 + col) * animationDelay);
 					}
 				}
 				
-				// After all gems are placed, create wave effect
-				const totalPlacementTime = (7 * 7 - 1) * 80 + 600; // Last gem delay + animation time
-
-				setTimeout(() => {
-					this.createWaveEffect();
-				}, totalPlacementTime + 200);
-
-				// Calculate total time for wave effect completion
-				const waveCompletionTime = totalPlacementTime + 200 + (6 + 6) * 33 + 220 + (49 * 9) + 275;
-				
-				// Re-enable ALL interactions after wave completes
-				setTimeout(() => {
-					this.animating = false;
-					this.enableAllInteractions();
-				}, waveCompletionTime);
-				
-				// Apply cosmetic themes after board creation
-				setTimeout(() => {
-					this.applyCurrentCosmetics();
-				}, 1000);
+				// Skip wave effect on low-performance devices
+				if (!this.isLowPerformanceDevice) {
+					const totalPlacementTime = (7 * 7 - 1) * animationDelay + dropDuration * 1000;
+					setTimeout(() => {
+						this.createWaveEffect();
+					}, totalPlacementTime + 200);
+				} else {
+					// Just re-enable interactions after gems are placed
+					const totalPlacementTime = (7 * 7 - 1) * animationDelay + dropDuration * 1000;
+					setTimeout(() => {
+						this.animating = false;
+						this.enableAllInteractions();
+						this.applyCurrentCosmetics();
+					}, totalPlacementTime + 200);
+				}
 			}
 
 			createWaveEffect() {
@@ -5042,14 +5122,15 @@ body.hard-mode .progress-fill {
 
 			addEventListeners() {
 				const gameBoard = document.getElementById('gameBoard');
-				gameBoard.addEventListener('click', (e) => {
-					// Check if interactions are disabled OR if animating OR if no moves left
+				
+				// Use passive listeners for better scroll performance
+				const eventOptions = { passive: true };
+				
+				// Handle both click and touch events
+				const handleGemInteraction = (e) => {
+					e.preventDefault();
+					
 					if (this.interactionsDisabled || this.animating || this.moves <= 0) {
-						console.log('Gem clicks disabled:', {
-							interactionsDisabled: this.interactionsDisabled,
-							animating: this.animating,
-							moves: this.moves
-						});
 						return;
 					}
 					
@@ -5059,7 +5140,6 @@ body.hard-mode .progress-fill {
 					const row = parseInt(gemElement.dataset.row);
 					const col = parseInt(gemElement.dataset.col);
 					
-					// Check for gem transmuter booster FIRST
 					if (this.activeBoosters['gem_transmuter'] && this.activeBoosters['gem_transmuter'] > 0) {
 						this.showGemTransmuterModal(row, col);
 						return;
@@ -5076,7 +5156,14 @@ body.hard-mode .progress-fill {
 					} else {
 						this.selectGem(row, col);
 					}
-				});
+				};
+				
+				// Use touch events on touch devices
+				if (this.isTouchDevice) {
+					gameBoard.addEventListener('touchstart', handleGemInteraction, { passive: false });
+				} else {
+					gameBoard.addEventListener('click', handleGemInteraction);
+				}
 			}
 
             selectGem(row, col) {
