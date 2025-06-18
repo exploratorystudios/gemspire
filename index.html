@@ -3966,43 +3966,61 @@ html, body {
                 });
             }
 
-            createShopItemElement(item) {
-                const div = document.createElement('div');
-                div.className = `shop-item ${item.rarity}`;
-                
-                const isOwned = this.purchasedUpgrades[item.id];
-                const quantity = this.consumableInventory[item.id] || 0;
-                
-                if (isOwned && !item.stackable) {
-                    div.classList.add('owned');
-                }
-                
-                const canAfford = this.crystals >= item.price;
-                const canPurchase = canAfford && (!isOwned || item.stackable);
-                
-                div.innerHTML = `
-                    <div class="shop-item-header">
-                        <div>
-                            <div class="shop-item-name">${item.name}</div>
-                            <div class="shop-item-type">${item.type}</div>
-                        </div>
-                        <div class="shop-item-price">
-                            <span class="crystal-icon">💎</span>
-                            <span>${formatNumber(item.price)}</span>
-                        </div>
-                    </div>
-                    <div class="shop-item-desc">${item.desc}</div>
-                    <div class="shop-item-footer">
-                        ${item.stackable ? `<div class="shop-item-quantity">Owned: ${formatNumber(quantity)}</div>` : '<div></div>'}
+			createShopItemElement(item) {
+				const div = document.createElement('div');
+				div.className = `shop-item ${item.rarity}`;
+				
+				const isOwned = this.purchasedUpgrades[item.id];
+				const quantity = this.consumableInventory[item.id] || 0;
+				const boosterQuantity = this.runBoosters[item.id] || 0;
+				
+				if (isOwned && !item.stackable) {
+					div.classList.add('owned');
+				}
+				
+				// Check limits for stackable items
+				let canPurchase = this.crystals >= item.price && (!isOwned || item.stackable);
+				let quantityDisplay = '';
+				
+				if (item.type === 'Consumable') {
+					const maxQuantity = item.id === 'time_freeze' ? 2 : 4;
+					canPurchase = canPurchase && quantity < maxQuantity;
+					quantityDisplay = `<div class="shop-item-quantity">Owned: ${quantity}/${maxQuantity}</div>`;
+				} else if (item.type === 'Run Booster') {
+					const maxQuantity = 4;
+					canPurchase = canPurchase && boosterQuantity < maxQuantity;
+					quantityDisplay = `<div class="shop-item-quantity">Owned: ${boosterQuantity}/${maxQuantity}</div>`;
+				} else if (item.stackable) {
+					quantityDisplay = `<div class="shop-item-quantity">Owned: ${formatNumber(quantity)}</div>`;
+				} else {
+					quantityDisplay = '<div></div>';
+				}
+				
+				div.innerHTML = `
+					<div class="shop-item-header">
+						<div>
+							<div class="shop-item-name">${item.name}</div>
+							<div class="shop-item-type">${item.type}</div>
+						</div>
+						<div class="shop-item-price">
+							<span class="crystal-icon">💎</span>
+							<span>${formatNumber(item.price)}</span>
+						</div>
+					</div>
+					<div class="shop-item-desc">${item.desc}</div>
+					<div class="shop-item-footer">
+						${quantityDisplay}
 						<button class="shop-buy-btn" ${!canPurchase ? 'disabled' : ''} 
 								onclick="(window.game || window.tempGameForMusic).initiatePurchase('${item.id}')">
-							${isOwned && !item.stackable ? 'OWNED' : 'BUY'}
+							${(isOwned && !item.stackable) ? 'OWNED' : 
+							  (item.type === 'Consumable' && quantity >= (item.id === 'time_freeze' ? 2 : 4)) ? 'MAX' :
+							  (item.type === 'Run Booster' && boosterQuantity >= 4) ? 'MAX' : 'BUY'}
 						</button>
-                    </div>
-                `;
-                
-                return div;
-            }
+					</div>
+				`;
+				
+				return div;
+			}
 
             openShop() {
                 this.updateCrystalDisplay();
@@ -4176,43 +4194,60 @@ html, body {
                 document.getElementById('purchaseConfirmation').style.display = 'block';
             }
 
-            confirmPurchase() {
-                const item = this.pendingPurchase;
-                if (!item) return;
-                
-                if (this.crystals >= item.price) {
-                    // Play purchase sound
-                    this.playSound('purchase');
-                    
-                    this.crystals -= item.price;
-                    this.saveCrystals();
-                    this.updateCrystalDisplay();
-                    
-                    if (item.type === 'Permanent Upgrade' || item.type === 'Prestige Upgrade' || item.type === 'Cosmetic') {
-                        this.purchasedUpgrades[item.id] = true;
-                        this.savePurchasedUpgrades();
-                        this.applyPermanentUpgrades();
-                    } else if (item.type === 'Consumable') {
-                        if (!this.consumableInventory[item.id]) {
-                            this.consumableInventory[item.id] = 0;
-                        }
-                        this.consumableInventory[item.id]++;
-                        this.saveConsumableInventory();
-                        this.updateConsumablesDisplay();
-                    } else if (item.type === 'Run Booster') {
-                        if (!this.runBoosters[item.id]) {
-                            this.runBoosters[item.id] = 0;
-                        }
-                        this.runBoosters[item.id]++;
-                        this.saveRunBoosters();
-                        this.updateBoostersDisplay();
-                    }
-                    
-                    this.renderShopItems();
-                }
-                
-                this.closePurchaseConfirmation();
-            }
+			confirmPurchase() {
+				const item = this.pendingPurchase;
+				if (!item) return;
+				
+				// Check limits before purchasing
+				if (item.type === 'Consumable') {
+					const currentQuantity = this.consumableInventory[item.id] || 0;
+					const maxQuantity = item.id === 'time_freeze' ? 2 : 4;
+					if (currentQuantity >= maxQuantity) {
+						this.closePurchaseConfirmation();
+						return;
+					}
+				} else if (item.type === 'Run Booster') {
+					const currentQuantity = this.runBoosters[item.id] || 0;
+					const maxQuantity = 4;
+					if (currentQuantity >= maxQuantity) {
+						this.closePurchaseConfirmation();
+						return;
+					}
+				}
+				
+				if (this.crystals >= item.price) {
+					// Play purchase sound
+					this.playSound('purchase');
+					
+					this.crystals -= item.price;
+					this.saveCrystals();
+					this.updateCrystalDisplay();
+					
+					if (item.type === 'Permanent Upgrade' || item.type === 'Prestige Upgrade' || item.type === 'Cosmetic') {
+						this.purchasedUpgrades[item.id] = true;
+						this.savePurchasedUpgrades();
+						this.applyPermanentUpgrades();
+					} else if (item.type === 'Consumable') {
+						if (!this.consumableInventory[item.id]) {
+							this.consumableInventory[item.id] = 0;
+						}
+						this.consumableInventory[item.id]++;
+						this.saveConsumableInventory();
+						this.updateConsumablesDisplay();
+					} else if (item.type === 'Run Booster') {
+						if (!this.runBoosters[item.id]) {
+							this.runBoosters[item.id] = 0;
+						}
+						this.runBoosters[item.id]++;
+						this.saveRunBoosters();
+						this.updateBoostersDisplay();
+					}
+					
+					this.renderShopItems();
+				}
+				
+				this.closePurchaseConfirmation();
+			}
 
             closePurchaseConfirmation() {
                 document.getElementById('purchaseConfirmation').style.display = 'none';
@@ -5511,7 +5546,7 @@ html, body {
 				// Calculate NEW target score based on floor progression (not reduced score)
 				let baseTargetScore = Math.floor(800 * Math.pow(1.45, this.floor - 1));
 				
-				// Apply Hard Mode scaling - 120% higher targets
+				// Apply Hard Mode scaling
 				if (this.hardModeActive) {
 					baseTargetScore = Math.floor(baseTargetScore * 10);
 				}
