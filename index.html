@@ -4166,7 +4166,7 @@ html, body {
 				}
 				
 				if (this.purchasedUpgrades['move_master']) {
-					this.bonusMoves = 1;
+					this.bonusMoves = (this.bonusMoves || 0) + 1;
 				}
 				
 				if (this.purchasedUpgrades['relic_abundance']) {
@@ -6490,9 +6490,8 @@ html, body {
 				// Reset all game state
 				this.score = 0;
 				this.displayScore = 0;
-				// Hard mode: different starting moves
-				let baseMoves = this.hardModeActive ? 3 : 4;
-				this.moves = baseMoves;
+				// FIXED: Use base moves of 4, hard mode adjustment happens in selectRelic
+				this.moves = 4;
 				this.floor = 1;
 				this.targetScore = 800;
 				this.multiplier = this.purchasedUpgrades['reality_breaker'] ? 5.0 : 1.0;
