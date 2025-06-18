@@ -5102,45 +5102,49 @@ body.hard-mode .progress-fill {
                 return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
             }
 
-            async swapGems(gem1, gem2) {
-                this.animating = true;
-                
-                this.playSound('swap');
-                
-                const elem1 = document.querySelector(`[data-row="${gem1.row}"][data-col="${gem1.col}"]`);
-                const elem2 = document.querySelector(`[data-row="${gem2.row}"][data-col="${gem2.col}"]`);
-                
-                const rect1 = elem1.getBoundingClientRect();
-                const rect2 = elem2.getBoundingClientRect();
-                
-                const deltaX = rect2.left - rect1.left;
-                const deltaY = rect2.top - rect1.top;
-                
-                elem1.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                elem2.style.transform = `translate(${-deltaX}px, ${-deltaY}px)`;
-                
-                await new Promise(resolve => setTimeout(resolve, 200));
-                
-                const temp = this.board[gem1.row][gem1.col];
-                this.board[gem1.row][gem1.col] = this.board[gem2.row][gem2.col];
-                this.board[gem2.row][gem2.col] = temp;
-                
-                const matches = this.findMatches();
-                
-                if (matches.length === 0) {
-                    this.board[gem2.row][gem2.col] = this.board[gem1.row][gem1.col];
-                    this.board[gem1.row][gem1.col] = temp;
-                    
-                    elem1.style.transform = '';
-                    elem2.style.transform = '';
-                    
-                    this.clearSelection();
-                    this.animating = false;
-                    return;
-                }
-                
-                this.moves--;
-                document.getElementById('movesLeft').textContent = this.moves;
+			async swapGems(gem1, gem2) {
+				this.animating = true;
+				this.disableAllInteractions(); // Disable at start of ANY swap
+				
+				this.playSound('swap');
+				
+				const elem1 = document.querySelector(`[data-row="${gem1.row}"][data-col="${gem1.col}"]`);
+				const elem2 = document.querySelector(`[data-row="${gem2.row}"][data-col="${gem2.col}"]`);
+				
+				const rect1 = elem1.getBoundingClientRect();
+				const rect2 = elem2.getBoundingClientRect();
+				
+				const deltaX = rect2.left - rect1.left;
+				const deltaY = rect2.top - rect1.top;
+				
+				elem1.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+				elem2.style.transform = `translate(${-deltaX}px, ${-deltaY}px)`;
+				
+				await new Promise(resolve => setTimeout(resolve, 200));
+				
+				const temp = this.board[gem1.row][gem1.col];
+				this.board[gem1.row][gem1.col] = this.board[gem2.row][gem2.col];
+				this.board[gem2.row][gem2.col] = temp;
+				
+				const matches = this.findMatches();
+				
+				if (matches.length === 0) {
+					// No matches - reverse the swap
+					this.board[gem2.row][gem2.col] = this.board[gem1.row][gem1.col];
+					this.board[gem1.row][gem1.col] = temp;
+					
+					elem1.style.transform = '';
+					elem2.style.transform = '';
+					
+					this.clearSelection();
+					this.animating = false;
+					this.enableAllInteractions(); // CRITICAL: Re-enable when no match
+					return;
+				}
+				
+				// Valid move - consume a move
+				this.moves--;
+				document.getElementById('movesLeft').textContent = this.moves;
 
 				// Check for lucky streak booster
 				if (this.activeBoosters['lucky_streak'] && this.activeBoosters['lucky_streak'] > 0) {
@@ -5176,37 +5180,38 @@ body.hard-mode .progress-fill {
 					this.showComboIndicator('🌊 CASCADE CATALYST TRIGGERED! (Cooldown until next match)');
 					this.updateBoostersDisplay();
 				}
-                
-                if (this.diceOfFate && Math.random() < 0.15) {
-                    this.showComboIndicator('🎲 LUCKY! FREE MOVE!');
-                    this.moves++;
-                }
-
-                if (this.timeDilator) {
-                    this.targetScore = Math.max(this.targetScore * 0.9, this.targetScore - 25);
-                    this.showComboIndicator('⏰ TARGET -25!');
-                }
-                
-                this.updateGemElement(elem1, this.board[gem1.row][gem1.col]);
-                this.updateGemElement(elem2, this.board[gem2.row][gem2.col]);
-                
-                elem1.style.transform = '';
-                elem2.style.transform = '';
-                
-                this.clearSelection();
-                
-                this.isCurrentlyScoring = false;
-                
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                await this.processMatches();
-                
-		this.animating = false;
 				
-                this.updateUI();
-                this.checkGameState();
-		this.resetMatchCooldowns();
-            }
+				if (this.diceOfFate && Math.random() < 0.15) {
+					this.showComboIndicator('🎲 LUCKY! FREE MOVE!');
+					this.moves++;
+				}
+
+				if (this.timeDilator) {
+					this.targetScore = Math.max(this.targetScore * 0.9, this.targetScore - 25);
+					this.showComboIndicator('⏰ TARGET -25!');
+				}
+				
+				this.updateGemElement(elem1, this.board[gem1.row][gem1.col]);
+				this.updateGemElement(elem2, this.board[gem2.row][gem2.col]);
+				
+				elem1.style.transform = '';
+				elem2.style.transform = '';
+				
+				this.clearSelection();
+				
+				this.isCurrentlyScoring = false;
+				
+				await new Promise(resolve => setTimeout(resolve, 100));
+				
+				await this.processMatches();
+				
+				this.animating = false;
+				this.enableAllInteractions(); // CRITICAL: Re-enable after processing
+				
+				this.updateUI();
+				this.checkGameState();
+				this.resetMatchCooldowns();
+			}
 
 			updateGemElement(element, gem) {
 			  // Store current opacity before clearing styles (for animations)
