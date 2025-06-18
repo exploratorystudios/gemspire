@@ -2340,6 +2340,117 @@ body.hard-mode .progress-fill {
     contain: layout style paint;
 }
 
+/* Mobile Auto-Fullscreen CSS */
+@media screen and (max-width: 768px) {
+    /* Force fullscreen layout on mobile */
+    html, body {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important; /* Dynamic viewport height for modern browsers */
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        overscroll-behavior: none !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* Ensure all main containers fill the screen */
+    .game-container,
+    .start-screen,
+    .audio-permission-screen,
+    .shop-screen,
+    .options-screen,
+    .game-over {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        margin: 0 !important;
+        max-width: none !important;
+        max-height: none !important;
+    }
+    
+    /* Handle iOS safe areas */
+    .game-container,
+    .start-screen,
+    .audio-permission-screen {
+        padding-top: env(safe-area-inset-top) !important;
+        padding-bottom: env(safe-area-inset-bottom) !important;
+        padding-left: env(safe-area-inset-left) !important;
+        padding-right: env(safe-area-inset-right) !important;
+    }
+    
+    /* Fix viewport on iOS to prevent bounce scrolling */
+    body {
+        position: fixed;
+        touch-action: none;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+    
+    /* Allow scrolling only in specific areas */
+    .shop-items,
+    .relic-options,
+    .stats-panel,
+    .relics-panel,
+    #relicsList,
+    #relicsListDesktop,
+    #relicsListMobile {
+        touch-action: pan-y !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+/* iOS-specific fixes */
+@supports (-webkit-touch-callout: none) {
+    /* iOS Only */
+    @media screen and (max-width: 768px) {
+        .game-container,
+        .start-screen,
+        .audio-permission-screen,
+        .shop-screen,
+        .options-screen {
+            height: -webkit-fill-available !important;
+            min-height: -webkit-fill-available !important;
+        }
+        
+        /* Fix for iOS Safari's bottom bar */
+        body {
+            height: 100vh;
+            height: -webkit-fill-available;
+        }
+    }
+}
+
+/* Landscape mobile adjustments */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    /* Hide browser UI hints */
+    html {
+        background: linear-gradient(135deg, #1e1e2e 0%, #2d1b3d 50%, #3e2723 100%);
+    }
+    
+    /* Adjust game container for landscape */
+    .game-container {
+        padding: 5px env(safe-area-inset-right) 5px env(safe-area-inset-left) !important;
+    }
+}
+
+
+/* Fix for mobile browsers' address bar */
+@media screen and (max-width: 768px) {
+    /* Use smaller viewport units to account for mobile browser chrome */
+    .game-container {
+        height: 100vh;
+        height: calc(var(--vh, 1vh) * 100);
+    }
+}
+
 </style>
 </head>
 <body>
@@ -6900,6 +7011,18 @@ body.hard-mode .progress-fill {
             // Show audio permission screen first
             document.getElementById('audioPermissionScreen').style.display = 'flex';
         });
+		
+		function setViewportHeight() {
+			const vh = window.innerHeight * 0.01;
+			document.documentElement.style.setProperty('--vh', `${vh}px`);
+		}
+
+		// Set on load
+		setViewportHeight();
+
+		// Update on resize/orientation change
+		window.addEventListener('resize', setViewportHeight);
+		window.addEventListener('orientationchange', setViewportHeight);
     </script>
 </body>
 </html>
