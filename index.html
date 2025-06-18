@@ -3428,7 +3428,7 @@ body.hard-mode .progress-fill {
 						{
 							id: 'hard_mode_unlock',
 							name: '🔥 Hard Mode',
-							desc: 'GREATLY increases difficulty: 60% higher targets, 25% lower gem values, 1 less move per floor, faster floor scaling',
+							desc: 'GREATLY increases difficulty: 120% higher targets, 40% lower gem values, 1 less move per floor, faster floor scaling',
 							price: 1000000,
 							rarity: 'legendary',
 							type: 'Prestige Upgrade'
@@ -5010,9 +5010,9 @@ body.hard-mode .progress-fill {
 				// Start with base random value
 				let baseValue = Math.floor(Math.random() * 25) + 15;
 				
-				// Apply hard mode penalty - 25% lower gem values
+				// Apply hard mode penalty - 40% lower gem values
 				if (this.hardModeActive) {
-					baseValue = Math.floor(baseValue * 0.75);
+					baseValue = Math.floor(baseValue * 0.6);
 				}
 				
 				// Apply base gem value bonus from Gem Mastery and/or Ascended Mastery
@@ -5299,9 +5299,9 @@ body.hard-mode .progress-fill {
 				// Calculate NEW target score based on floor progression (not reduced score)
 				let baseTargetScore = Math.floor(800 * Math.pow(1.45, this.floor - 1));
 				
-				// Apply Hard Mode scaling - 60% higher targets
+				// Apply Hard Mode scaling - 120% higher targets
 				if (this.hardModeActive) {
-					baseTargetScore = Math.floor(baseTargetScore * 1.6);
+					baseTargetScore = Math.floor(baseTargetScore * 2.2);
 				}
 				
 				this.targetScore = baseTargetScore;
