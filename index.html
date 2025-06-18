@@ -4934,30 +4934,37 @@ html, body {
 			  }
 			}
 
-            animateScoreIncrease(amount) {
-                // Show popup with the amount being added
-                this.showScorePopup(amount);
+			animateScoreIncrease(amount) {
+				// Show popup with the amount being added
+				this.showScorePopup(amount);
 
-                // Animate score counter
-                const startScore = this.displayScore;
-                const endScore = this.score;
-                const duration = 600;
-                const startTime = Date.now();
+				// Animate score counter AND progress bar simultaneously
+				const startScore = this.displayScore;
+				const endScore = this.score;
+				const startProgress = Math.min(100, (startScore / this.targetScore) * 100);
+				const endProgress = Math.min(100, (endScore / this.targetScore) * 100);
+				const duration = 600;
+				const startTime = Date.now();
 
-                const animateScore = () => {
-                    const elapsed = Date.now() - startTime;
-                    const progress = Math.min(elapsed / duration, 1);
-                    
-                    this.displayScore = startScore + (endScore - startScore) * progress;
-                    this.updateScoreDisplay();
+				const animateScore = () => {
+					const elapsed = Date.now() - startTime;
+					const progress = Math.min(elapsed / duration, 1);
+					
+					// Animate score display
+					this.displayScore = startScore + (endScore - startScore) * progress;
+					this.updateScoreDisplay();
+					
+					// Animate progress bar simultaneously
+					const currentProgress = startProgress + (endProgress - startProgress) * progress;
+					document.getElementById('progressFill').style.width = currentProgress + '%';
 
-                    if (progress < 1) {
-                        requestAnimationFrame(animateScore);
-                    }
-                };
+					if (progress < 1) {
+						requestAnimationFrame(animateScore);
+					}
+				};
 
-                requestAnimationFrame(animateScore);
-            }
+				requestAnimationFrame(animateScore);
+			}
 
 			showScorePopup(amount) {
 				const scoreDisplay = document.getElementById('scoreDisplay');
